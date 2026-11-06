@@ -1,0 +1,17 @@
+{
+  "name": "llm-ontology-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev --host 127.0.0.1 --port 5294",
+    "build": "vitepress build",
+    "preview": "vitepress preview --host 127.0.0.1 --port 5295",
+    "font": "uv run --no-project --with fonttools==4.67.0 --with brotli==1.2.0 python tools/subset_font.py"
+  },
+  "devDependencies": {
+    "vitepress": "1.6.4",
+    "vue": "3.5.43"
+  },
+  "packageManager": "pnpm@11.22.0"
+}
