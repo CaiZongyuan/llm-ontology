@@ -34,6 +34,13 @@ const trackH = computed(() => vh.value * (1 + HERO_SCREENS + DURATION * PER_SECO
 const chapter = computed(() => chapterAt(t.value))
 const ci = computed(() => chapterIndex(t.value))
 const heroO = computed(() => 1 - smooth(heroP.value))
+// Hero and film layers cross-fade over a narrow band so their text never stacks
+// at half opacity (the previous 1-heroO / heroO pair overlapped on short screens).
+const heroV = computed(() => clamp((heroO.value - 0.42) / 0.25))
+const filmV = computed(() => clamp((0.58 - heroO.value) / 0.25))
+// The graph acts as a legible illustration while the hero is visible, then
+// hands over to the staged reveal once the film starts.
+const stageHero = computed(() => clamp((heroO.value - 0.2) / 0.5))
 const narrow = computed(() => vw.value < 980)
 const offsetX = computed(() => (narrow.value ? 0 : lerp(0.02, 0.08, heroO.value)))
 const offsetY = computed(() => (narrow.value ? lerp(-0.06, -0.12, heroO.value) : 0))
@@ -136,15 +143,26 @@ onBeforeUnmount(() => {
   <div class="pl">
     <section ref="track" class="film" :style="{ height: trackH + 'px' }">
       <div class="sticky">
-        <StageCanvas class="stage" :t="t" :offset-x="offsetX" :offset-y="offsetY" :reduced="reduced" />
-        <div class="veil" :style="{ opacity: 0.8 + 0.2 * heroO }" />
+        <StageCanvas
+          class="stage"
+          :t="t"
+          :hero-mode="stageHero"
+          :offset-x="offsetX"
+          :offset-y="offsetY"
+          :reduced="reduced"
+          :style="narrow ? { opacity: 0.8 * (1 - heroO) } : undefined"
+        />
+        <!-- Two independent scrims: the hero gets a fully opaque reading column,
+             the film keeps a soft vignette behind its floating cards. -->
+        <div class="veil veil--hero" :style="{ opacity: heroO }" />
+        <div class="veil veil--film" :style="{ opacity: 1 - heroO }" />
 
         <header
           class="hero"
-          :inert="heroO <= 0.5 || undefined"
-          :style="{ opacity: heroO, transform: `translateY(${-28 * (1 - heroO)}px)`, pointerEvents: heroO > 0.5 ? 'auto' : 'none' }"
+          :inert="heroV <= 0.01 || undefined"
+          :style="{ opacity: heroV, transform: `translateY(${-28 * (1 - heroV)}px)`, pointerEvents: heroV > 0.5 ? 'auto' : 'none', visibility: heroV <= 0.01 ? 'hidden' : 'visible' }"
         >
-          <p class="pl-eyebrow">{{ HERO.eyebrow }}</p>
+          <p class="pl-eyebrow">{{ HERO.eyebrow }}<span class="sep"> · </span><span class="cn">{{ HERO.eyebrowCn }}</span></p>
           <h1><span v-for="s in HERO.title" :key="s" class="nb">{{ s }}</span></h1>
           <p class="lede">{{ HERO.lede }}</p>
           <div class="actions" data-film-control>
@@ -160,7 +178,11 @@ onBeforeUnmount(() => {
           <p class="note">向下滚动或点击自动演示，观察「医院出院协同」从异构表与 SOP 编译为可执行本体的全过程。</p>
         </header>
 
-        <div class="copy" :style="{ opacity: 1 - heroO }">
+        <div
+          class="copy"
+          :inert="filmV <= 0.01 || undefined"
+          :style="{ opacity: filmV, visibility: filmV <= 0.01 ? 'hidden' : 'visible' }"
+        >
           <Transition name="swap" mode="out-in">
             <div :key="chapter.id">
               <p class="kicker"><span class="mono">阶段 {{ chapter.n }}</span><span>{{ chapter.kicker }}</span></p>
@@ -171,7 +193,7 @@ onBeforeUnmount(() => {
           <div class="local"><i :style="{ transform: `scaleX(${local})` }" /></div>
         </div>
 
-        <aside class="instruments" :style="{ opacity: 1 - heroO }">
+        <aside class="instruments" :style="{ opacity: filmV, visibility: filmV <= 0.01 ? 'hidden' : 'visible' }">
           <AgentConsole :t="t" :limit="narrow ? 3 : 6" />
           <template v-if="!narrow">
             <ProjectTree :t="t" />
@@ -179,15 +201,15 @@ onBeforeUnmount(() => {
           </template>
         </aside>
 
-        <div class="gate"><GateToast :t="t" /></div>
+        <div class="gate" :style="{ opacity: filmV, visibility: filmV <= 0.01 ? 'hidden' : 'visible' }"><GateToast :t="t" /></div>
 
-        <HudStrip v-if="!narrow" class="hud" :t="t" :style="{ opacity: 1 - heroO }" />
+        <HudStrip v-if="!narrow" class="hud" :t="t" :style="{ opacity: filmV, visibility: filmV <= 0.01 ? 'hidden' : 'visible' }" />
 
         <div
           class="controls"
           data-film-control
-          :inert="heroO >= 0.5 || undefined"
-          :style="{ opacity: 1 - heroO, pointerEvents: heroO < 0.5 ? 'auto' : 'none' }"
+          :inert="filmV < 0.5 || undefined"
+          :style="{ opacity: filmV, pointerEvents: filmV > 0.5 ? 'auto' : 'none', visibility: filmV <= 0.01 ? 'hidden' : 'visible' }"
         >
           <button ref="ctl" class="ctl" :aria-label="playing ? '暂停' : '自动播放'" :aria-pressed="playing" @click="toggle">
             <template v-if="playing">
@@ -216,7 +238,7 @@ onBeforeUnmount(() => {
           </button>
         </div>
 
-        <div class="cue" :style="{ opacity: heroO }"><span>向下滚动</span><i /></div>
+        <div class="cue" :style="{ opacity: heroV, visibility: heroV <= 0.01 ? 'hidden' : 'visible' }"><span>向下滚动</span><i /></div>
       </div>
     </section>
 
@@ -228,17 +250,42 @@ onBeforeUnmount(() => {
 .film { position: relative; }
 .sticky { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; background: var(--ground); }
 .stage { position: absolute; inset: 0; transition: opacity .2s linear; }
-.veil { position: absolute; inset: 0; pointer-events: none; background:
-  radial-gradient(ellipse 44% 80% at 0% 50%, color-mix(in srgb, var(--ground) 94%, transparent), color-mix(in srgb, var(--ground) 55%, transparent) 55%, transparent 100%),
-  linear-gradient(180deg, color-mix(in srgb, var(--ground) 70%, transparent), transparent 18%, transparent 82%, color-mix(in srgb, var(--ground) 80%, transparent)); }
+.veil { position: absolute; inset: 0; pointer-events: none; }
+/* Hero: a solid reading column on the left, graph progressively revealed on
+   the right. No graph stroke can ever cross the headline or the lede. */
+.veil--hero { background:
+  linear-gradient(90deg,
+    var(--ground) 0%, var(--ground) 46%,
+    color-mix(in srgb, var(--ground) 80%, transparent) 49%,
+    color-mix(in srgb, var(--ground) 30%, transparent) 52%,
+    transparent 56%),
+  linear-gradient(180deg,
+    color-mix(in srgb, var(--ground) 88%, transparent) 0%,
+    transparent 14%, transparent 86%,
+    color-mix(in srgb, var(--ground) 88%, transparent) 100%); }
+/* Film: keep the floating copy/panels readable without hiding the whole graph. */
+.veil--film { background:
+  linear-gradient(90deg,
+    var(--ground) 0%, var(--ground) 33%,
+    color-mix(in srgb, var(--ground) 88%, transparent) 39%,
+    color-mix(in srgb, var(--ground) 40%, transparent) 45%,
+    transparent 53%),
+  linear-gradient(180deg, color-mix(in srgb, var(--ground) 82%, transparent), transparent 18%, transparent 82%, color-mix(in srgb, var(--ground) 86%, transparent)); }
 
-.hero { position: absolute; left: max(32px, 6vw); top: 50%; translate: 0 -50%; max-width: 620px; z-index: 2; }
-.hero h1 { margin-top: 18px; font-size: clamp(38px, 5.2vw, 70px); line-height: 1.14; }
-.lede { margin-top: 22px; font-size: 16.5px; line-height: 1.8; color: var(--ink-2); max-width: 560px; }
-.actions { margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap; }
-.note { margin-top: 18px; font-size: 12.5px; color: var(--faint); }
+.hero { position: absolute; left: max(32px, 6vw); top: 50%; translate: 0 -50%; max-width: min(620px, 44vw); z-index: 4; }
+.hero .sep { color: var(--ghost); }
+/* Keep the Chinese tagline as one unit so narrow screens never split it
+   mid-word after the Latin eyebrow. */
+.hero .cn { white-space: nowrap; }
+/* Cap by viewport height as well: on short windows the old 70px title wrapped
+   into four lines and collided with the lede, buttons and scroll cue. */
+.hero h1 { margin-top: 18px; font-size: clamp(32px, min(4.6vw, 7.6vh), 62px); line-height: 1.2; }
+.hero h1 .nb { display: block; }
+.lede { margin-top: 20px; font-size: 16px; line-height: 1.8; color: var(--ink-2); max-width: min(520px, 100%); }
+.actions { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+.note { margin-top: 16px; font-size: 12.5px; line-height: 1.7; color: var(--faint); max-width: min(520px, 100%); }
 
-.copy { position: absolute; left: max(32px, 4.2vw); top: 50%; translate: 0 -54%; width: min(370px, 28vw); z-index: 2; padding: 16px 18px; border-radius: 14px; background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); box-shadow: var(--shadow-1); backdrop-filter: blur(12px); }
+.copy { position: absolute; left: max(32px, 4.2vw); top: 50%; translate: 0 -54%; width: min(370px, 28vw); z-index: 2; padding: 16px 18px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 0 0 10px var(--ground), var(--shadow-1); }
 .kicker { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
 .kicker .mono { color: var(--accent-ink); font-size: 11.5px; letter-spacing: .04em; }
 .copy h2 { margin-top: 12px; font-size: clamp(22px, 2.2vw, 30px); line-height: 1.28; }
@@ -254,7 +301,7 @@ onBeforeUnmount(() => {
 .hud { position: absolute; left: 50%; bottom: 84px; translate: -50% 0; z-index: 2; }
 
 .controls { position: absolute; left: 24px; right: 24px; bottom: 20px; display: flex; align-items: center; gap: 14px; z-index: 3; }
-.ctl { flex-shrink: 0; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-2); background: color-mix(in srgb, var(--surface) 86%, transparent); color: var(--ink); cursor: pointer; backdrop-filter: blur(10px); }
+.ctl { flex-shrink: 0; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); cursor: pointer; }
 .ctl:hover { border-color: var(--ghost); }
 .ctl svg { width: 15px; height: 15px; }
 .rail { flex: 1; display: flex; gap: 4px; min-width: 0; }
@@ -265,26 +312,49 @@ onBeforeUnmount(() => {
 .rail span { font-size: 11.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .3s var(--ease); }
 .rail button.on span { color: var(--ink); }
 .rail button:hover span { color: var(--ink-2); }
-.skip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line-2); background: color-mix(in srgb, var(--surface) 86%, transparent); color: var(--ink-2); font-size: 13px; cursor: pointer; backdrop-filter: blur(10px); }
+.skip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink-2); font-size: 13px; cursor: pointer; }
 .skip svg { width: 13px; height: 13px; }
 
 .cue { position: absolute; left: 50%; bottom: 28px; translate: -50% 0; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 11.5px; color: var(--faint); pointer-events: none; }
 .cue i { width: 1px; height: 28px; background: linear-gradient(var(--faint), transparent); }
 
+/* On short viewports the hero fills the screen; the scroll cue would land on
+   top of the hero note, so drop it and let the note do the explaining. */
+@media (max-height: 700px) {
+  .cue { display: none; }
+}
 @media (max-width: 1240px) {
   .instruments { width: 300px; }
 }
 @media (max-width: 980px) {
-  .hero { left: 20px; right: 20px; top: auto; bottom: 120px; translate: 0 0; }
-  .hero h1 { font-size: 38px; }
-  .lede { font-size: 15px; }
+  /* Narrow screens have no room for a side-by-side graph. Stage opacity is
+     driven inline by heroO: no cropped graph fragments on the first screen,
+     a faint graph texture behind the film panels once scrolling starts.
+     Both scrims then split the screen vertically into clean text bands. */
+  .veil--hero { background: linear-gradient(180deg,
+    color-mix(in srgb, var(--ground) 40%, transparent) 0%,
+    color-mix(in srgb, var(--ground) 40%, transparent) 22%,
+    var(--ground) 40%, var(--ground) 100%); }
+  .veil--film { background: linear-gradient(180deg,
+    var(--ground) 0%,
+    color-mix(in srgb, var(--ground) 92%, transparent) 23%,
+    color-mix(in srgb, var(--ground) 35%, transparent) 38%,
+    color-mix(in srgb, var(--ground) 35%, transparent) 52%,
+    var(--ground) 64%, var(--ground) 100%); }
+
+  .hero { left: 20px; right: 20px; top: auto; bottom: 92px; translate: 0 0; max-width: none; }
+  .hero h1 { font-size: clamp(28px, 8.2vw, 40px); line-height: 1.22; }
+  .lede { font-size: 14.5px; line-height: 1.75; max-width: none; }
+  .note { font-size: 12px; max-width: none; }
+  .actions { margin-top: 20px; }
   .copy { left: 20px; right: 20px; width: auto; top: auto; bottom: 86px; translate: 0 0; padding: 14px 16px; }
   .copy h2 { font-size: 20px; margin-top: 8px; white-space: normal; }
   .body { font-size: 13.5px; margin-top: 8px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .local { margin-top: 12px; }
   .instruments { top: 70px; left: 16px; right: 16px; width: auto; bottom: auto; }
-  .gate { top: auto; bottom: 330px; }
+  .gate { top: 208px; bottom: auto; }
   .rail span { display: none; }
   .controls { left: 16px; right: 16px; bottom: 16px; }
+  .cue { display: none; }
 }
 </style>

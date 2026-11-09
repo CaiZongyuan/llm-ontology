@@ -1,7 +1,8 @@
 export const DURATION = 60
 
 export const HERO = {
-  eyebrow: 'EVIDENCE-GROUNDED DOMAIN MODEL COMPILER · 交互式架构教程',
+  eyebrow: 'EVIDENCE-GROUNDED DOMAIN MODEL COMPILER',
+  eyebrowCn: '交互式架构教程',
   title: ['从杂乱业务资料，', '到可验证、可执行的', 'Agentic 业务本体'],
   lede: '串联 Ontology、NVIDIA Auto-Ontology、Semantica、Karpathy LLM Wiki 与 JetBrains MPS，用一个真实的「智慧医院数据治理与患者出院协同」项目，把 llm-ontology 的三个闭环与六个阶段从头走通。',
 }

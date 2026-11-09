@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { chapterIndex, clamp, ramp } from './story'
+import { chapterIndex, clamp, lerp, ramp } from './story'
 
 const props = defineProps<{
   t: number
   offsetX?: number
   offsetY?: number
   reduced?: boolean
+  /** 1 while the hero is on screen, 0 during the staged film. */
+  heroMode?: number
 }>()
 
 const ci = computed(() => chapterIndex(props.t))
+const hero = computed(() => props.heroMode ?? 0)
 const shiftStyle = computed(() => ({
   transform: `translate(${(props.offsetX ?? 0) * 320}px, ${(props.offsetY ?? 0) * 180}px)`,
 }))
@@ -66,6 +69,12 @@ function nodeOpacity(group: number) {
   return clamp(0.15 + ramp(t, 48, 54) * 0.85)
 }
 
+/** In hero mode the whole graph is a static, evenly legible illustration;
+    the staged reveal takes over once the film starts. */
+function displayOpacity(group: number) {
+  return lerp(nodeOpacity(group), group === 0 ? 0.92 : 0.8, hero.value)
+}
+
 function isHighlighted(id: string) {
   const c = ci.value
   if (c === 0) return id.startsWith('src-') || id.startsWith('cl-')
@@ -92,7 +101,7 @@ function isHighlighted(id: string) {
       <rect width="1280" height="680" fill="url(#ont-grid)" />
 
       <!-- Column lane headers -->
-      <g class="lanes" transform="translate(0, 92)">
+      <g class="lanes" transform="translate(0, 92)" :style="{ opacity: 1 - hero }">
         <g transform="translate(150, 0)">
           <rect x="0" y="0" width="180" height="26" rx="6" fill="var(--surface)" stroke="var(--line-2)" />
           <text x="90" y="17" text-anchor="middle">1. RAW SOURCES</text>
@@ -112,7 +121,7 @@ function isHighlighted(id: string) {
       </g>
 
       <!-- Edges -->
-      <g class="edges">
+      <g class="edges" :class="{ still: hero > 0.5 }">
         <path
           v-for="(e, idx) in EDGES"
           :key="idx"
@@ -128,7 +137,7 @@ function isHighlighted(id: string) {
           v-for="n in NODES"
           :key="n.id"
           :transform="`translate(${n.x - 88}, ${n.y - 28})`"
-          :style="{ opacity: nodeOpacity(n.group) }"
+          :style="{ opacity: displayOpacity(n.group) }"
           :class="{
             hi: isHighlighted(n.id),
             bad: n.id === 'cl-12' || (n.id === 'gen-guard' && t >= 44 && t < 47),
@@ -148,10 +157,13 @@ function isHighlighted(id: string) {
 <style scoped>
 .sc { width: 100%; height: 100%; overflow: hidden; }
 .canvas { width: 100%; height: 100%; transition: transform .35s var(--ease); }
+.lanes { transition: opacity .25s var(--ease); }
 .lanes text { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; fill: var(--faint); }
 .edges path { fill: none; stroke: var(--line-2); stroke-width: 1.5; stroke-dasharray: 5 4; opacity: 0.45; transition: stroke .35s var(--ease), opacity .35s var(--ease); }
 .edges path.active { stroke: var(--accent); opacity: 0.78; stroke-dasharray: none; }
 .edges path.pulse { stroke: var(--accent-ink); stroke-width: 2.2; stroke-dasharray: 8 4; animation: wb-flow 1.2s linear infinite; opacity: 1; }
+/* Hero illustration: calm, even edges instead of one pulsing highlight. */
+.edges.still path, .edges.still path.active, .edges.still path.pulse { opacity: .5; }
 .nodes .card { fill: var(--surface); stroke: var(--line-2); stroke-width: 1.2; transition: all .3s var(--ease); }
 .nodes .dot { fill: var(--ghost); transition: fill .3s var(--ease); }
 .nodes .title { font-family: var(--font-ui); font-size: 12.5px; font-weight: 600; fill: var(--ink); }

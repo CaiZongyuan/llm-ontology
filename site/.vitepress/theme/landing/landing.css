@@ -28,16 +28,19 @@
   .pl .pl-section-lede { font-size: 15px; }
 }
 
+/* Opaque on purpose: the graph sits directly behind these cards, so any
+   translucency lets node labels bleed through as if the text overflowed. */
 .pl-panel {
   position: relative; border: 1px solid var(--line); border-radius: 12px;
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  box-shadow: var(--shadow-1);
-  backdrop-filter: blur(16px) saturate(1.1); -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  background: var(--surface);
+  /* A ground-colour gasket stops graph labels from reading as clipped text
+     right at the card edge and in the 10px gaps between stacked panels. */
+  box-shadow: 0 0 0 7px var(--ground), var(--shadow-1);
 }
 .pl-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px 0; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .06em; color: var(--faint); text-transform: uppercase; }
 .pl-panel-body { padding: 10px 14px 14px; }
 
-.pl-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px; border-radius: 9px; font-size: 14px; font-weight: 500; border: 1px solid var(--line-2); color: var(--ink); background: color-mix(in srgb, var(--surface) 70%, transparent); transition: background .2s var(--ease), border-color .2s var(--ease); cursor: pointer; }
+.pl-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px; border-radius: 9px; font-size: 14px; font-weight: 500; border: 1px solid var(--line-2); color: var(--ink); background: var(--surface); transition: background .2s var(--ease), border-color .2s var(--ease); cursor: pointer; }
 .pl-btn:hover { border-color: var(--ghost); background: var(--surface-2); }
 .pl .pl-btn--primary { background: var(--ink); color: var(--ground); border-color: var(--ink); }
 .pl .pl-btn--primary:hover { background: var(--ink-2); border-color: var(--ink-2); }
