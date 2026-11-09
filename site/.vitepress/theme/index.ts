@@ -12,6 +12,13 @@ import EvidenceReconcileLab from './components/EvidenceReconcileLab.vue'
 import PolicyAstSandbox from './components/PolicyAstSandbox.vue'
 import IncrementalImpactGraph from './components/IncrementalImpactGraph.vue'
 import Quiz from './components/Quiz.vue'
+import OntologyJourney from './components/OntologyJourney.vue'
+import ChangeSetPreviewLab from './components/ChangeSetPreviewLab.vue'
+import SourceTagLab from './components/SourceTagLab.vue'
+import ActionProposalLab from './components/ActionProposalLab.vue'
+import ReliabilityTraceLab from './components/ReliabilityTraceLab.vue'
+import GoldenScenarioLab from './components/GoldenScenarioLab.vue'
+import LessonCheck from './components/LessonCheck.vue'
 import './style.css'
 
 export default {
@@ -31,6 +38,13 @@ export default {
       PolicyAstSandbox,
       IncrementalImpactGraph,
       Quiz,
+      OntologyJourney,
+      ChangeSetPreviewLab,
+      SourceTagLab,
+      ActionProposalLab,
+      ReliabilityTraceLab,
+      GoldenScenarioLab,
+      LessonCheck,
     }
     for (const [name, c] of Object.entries(all)) app.component(name, c)
   },

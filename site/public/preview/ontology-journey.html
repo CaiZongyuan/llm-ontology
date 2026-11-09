@@ -1,0 +1,1407 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从 0 到 1：一份 Ontology 的诞生 · 交互预览</title>
+<style>
+/* ===========================================================================
+   Interactive preview — self-contained, no build step, no external assets.
+   Visual language follows site/.vitepress/theme/style.css (warm paper + indigo).
+   Later this can be split into a VitePress Vue component under theme/landing/.
+   =========================================================================== */
+:root{
+  --ground:#f3f2ee; --ground2:#ecebe6; --surface:#fdfdfb; --surface2:#f0efea;
+  --line:#e2dfd7; --line2:#cdc9bf; --ink:#181713; --ink2:#36342f;
+  --muted:#5f5c55; --faint:#8a877f; --accent:#4c50c4; --accent-ink:#3c41b5;
+  --accent-soft:rgba(76,80,196,.09); --c1:#4a50d4; --c2:#d0662c; --c3:#1a9a74;
+  --c4:#8a6bb1; --ok:#2f7b4f; --ok-soft:rgba(47,123,79,.10);
+  --warn:#94620b; --warn-soft:rgba(148,98,11,.10); --bad:#c63d2f; --bad-soft:rgba(198,61,47,.10);
+  --term:#141413; --term-line:#262522; --term-ink:#d3d0c8; --term-dim:#8d8a82;
+  --term-ok:#88c49c; --term-bad:#f2766a; --term-warn:#e2b25d; --term-acc:#9ca4ff;
+  --shadow:0 1px 2px rgba(48,38,18,.07), 0 20px 40px -26px rgba(48,38,18,.36);
+  --shadow2:0 18px 44px -18px rgba(46,36,22,.22);
+  --font-display:'Noto Serif SC','Songti SC','STSong','Source Han Serif SC',serif;
+  --font-ui:'IBM Plex Sans','PingFang SC','Microsoft YaHei','Noto Sans CJK SC','Noto Sans SC',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+html.dark{
+  --ground:#121211; --ground2:#0d0d0c; --surface:#181816; --surface2:#201f1d;
+  --line:#292825; --line2:#383632; --ink:#efede7; --ink2:#d3d0c8;
+  --muted:#a3a097; --faint:#827f76; --accent:#9ca4ff; --accent-ink:#bcc1ff;
+  --accent-soft:rgba(156,164,255,.11); --c1:#7078e8; --c2:#d0703a; --c3:#1f9e80;
+  --c4:#ab8ed0; --ok:#88c49c; --ok-soft:rgba(136,196,156,.12);
+  --warn:#e2b25d; --warn-soft:rgba(226,178,93,.12); --bad:#f2766a; --bad-soft:rgba(242,118,106,.12);
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 16px 36px -20px rgba(0,0,0,.65);
+  --shadow2:0 18px 44px -12px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--ground);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:24px 24px;opacity:.5}
+button{font-family:inherit;cursor:pointer}
+.app{position:relative;z-index:1;max-width:1420px;margin:0 auto;padding:0 22px 30px}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;height:66px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--surface);
+  display:grid;place-items:center;font-family:var(--font-mono);font-size:13px;font-weight:700;flex:none}
+.brand h1{font-family:var(--font-display);font-size:17px;font-weight:600;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand .sub{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--faint);white-space:nowrap}
+.top-actions{display:flex;align-items:center;gap:8px;flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:34px;padding:0 13px;
+  border-radius:8px;border:1px solid var(--line2);background:var(--surface);color:var(--ink);
+  font-size:13px;font-weight:500;transition:.2s var(--ease);white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--faint);background:var(--surface2);transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn--primary{background:var(--ink);border-color:var(--ink);color:var(--ground)}
+.btn--primary:hover:not(:disabled){background:var(--ink2);border-color:var(--ink2);color:var(--ground)}
+.btn--accent{background:var(--accent);border-color:var(--accent);color:#fff}
+html.dark .btn--accent{color:#14152c}
+.btn--ghost{background:transparent;border-style:dashed;color:var(--muted)}
+.btn--sm{height:29px;padding:0 10px;font-size:12px}
+.btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+
+/* ---------- mission strip ---------- */
+.mission{display:flex;align-items:center;gap:12px;margin:16px 0 6px;padding:11px 15px;border-radius:11px;
+  border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow);font-size:13.5px}
+.mission .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--accent-ink);
+  border:1px solid var(--accent);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.mission .q{color:var(--ink2);flex:1}
+.mission .q b{color:var(--ink)}
+.mission .state{font-family:var(--font-mono);font-size:11px;color:var(--faint);white-space:nowrap}
+.mission.answered{border-color:var(--ok);background:var(--ok-soft)}
+.mission.answered .state{color:var(--ok)}
+
+/* ---------- pipeline rail ---------- */
+.rail{display:flex;gap:6px;overflow-x:auto;padding:14px 2px 16px;scrollbar-width:thin}
+.rail-item{position:relative;flex:1;min-width:118px;text-align:left;padding:9px 10px 10px;border-radius:10px;
+  border:1px solid var(--line);background:var(--surface);color:var(--muted);transition:.25s var(--ease)}
+.rail-item:hover{border-color:var(--line2);background:var(--surface2)}
+.rail-item .rn{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--faint);display:flex;justify-content:space-between}
+.rail-item .rl{font-size:12.5px;font-weight:600;color:var(--ink2);margin-top:4px;white-space:nowrap}
+.rail-item .rf{font-family:var(--font-mono);font-size:9.5px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rail-item.done{border-color:var(--ok);background:var(--ok-soft)}
+.rail-item.done .rn{color:var(--ok)}
+.rail-item.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
+.rail-item.active .rl{color:var(--accent-ink)}
+.rail-item.active::after{content:'';position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+.rail-item .tick{color:var(--ok);font-weight:700}
+
+/* ---------- layout ---------- */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 322px;gap:16px;align-items:start}
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.stage-head{padding:17px 20px 14px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,var(--surface2),transparent)}
+.stage-head .kicker{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase}
+.stage-head h2{font-family:var(--font-display);font-size:24px;font-weight:600;margin:6px 0 5px;line-height:1.3}
+.stage-head p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.7}
+.acts{padding:20px;min-height:600px}
+.act{display:none}
+.act.on{display:block;animation:actIn .42s var(--ease) both}
+@keyframes actIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.act-lead{font-size:13.5px;color:var(--muted);margin:0 0 16px;line-height:1.75}
+.act-lead em{font-style:normal;color:var(--accent-ink);font-weight:600}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.bar .status{font-size:12.5px;color:var(--muted);flex:1;min-width:180px}
+.bar .status.ok{color:var(--ok);font-weight:600}
+.hint{font-size:12px;color:var(--faint)}
+.mini-title{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;color:var(--faint);text-transform:uppercase;margin:0 0 10px}
+
+/* ---------- coach panel ---------- */
+.coach{position:sticky;top:14px;padding:18px}
+.coach .step-no{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;color:var(--accent-ink)}
+.coach h3{font-family:var(--font-display);font-size:19px;font-weight:600;margin:6px 0 14px;line-height:1.4}
+.cblock{margin-bottom:14px}
+.cblock .lab{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--faint);margin-bottom:5px}
+.cblock .lab i{width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block}
+.cblock p{margin:0;font-size:13px;color:var(--ink2);line-height:1.75}
+.cblock.why{background:var(--warn-soft);border-left:2px solid var(--warn);padding:9px 11px;border-radius:0 8px 8px 0}
+.cblock.why .lab i{background:var(--warn)}
+.tasks{border-top:1px dashed var(--line);padding-top:13px;margin-top:4px}
+.tasks .lab{font-size:11px;font-weight:600;color:var(--faint);margin-bottom:8px}
+.tasks ul{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.tasks li{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--muted);line-height:1.5}
+.tasks li .box{width:15px;height:15px;border:1px solid var(--line2);border-radius:4px;flex:none;margin-top:2px;display:grid;place-items:center;font-size:10px;color:transparent}
+.tasks li.done{color:var(--ink2)}
+.tasks li.done .box{background:var(--ok);border-color:var(--ok);color:#fff}
+.coach-out{margin-top:14px;padding:10px 11px;border:1px dashed var(--line2);border-radius:9px;background:var(--surface2)}
+.coach-out .lab{font-size:10px;letter-spacing:.08em;color:var(--faint);font-family:var(--font-mono);text-transform:uppercase}
+.coach-out code{font-family:var(--font-mono);font-size:12px;color:var(--accent-ink);display:block;margin-top:4px;word-break:break-all}
+.coach-foot{margin-top:14px;font-size:11.5px;color:var(--faint);line-height:1.6}
+
+/* ---------- bottom bar ---------- */
+.bottom{margin-top:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);padding:13px 16px}
+.funnel{display:flex;gap:0;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.fstat{display:flex;align-items:baseline;gap:7px;min-width:96px;padding:5px 9px;border-radius:8px;opacity:.35;transition:.4s var(--ease)}
+.fstat.lit{opacity:1;background:var(--accent-soft)}
+.fstat .n{font-family:var(--font-mono);font-size:20px;font-weight:600;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.fstat .l{font-size:11.5px;color:var(--muted)}
+.fstat .arw{color:var(--line2);font-size:13px}
+.controls{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.controls .pos{font-family:var(--font-mono);font-size:12px;color:var(--faint);flex:1}
+.controls .skip{font-size:12px;color:var(--faint);text-decoration:underline;text-underline-offset:3px;cursor:pointer;background:none;border:0;padding:4px}
+.foot-note{margin-top:12px;font-family:var(--font-mono);font-size:10.5px;color:var(--faint);text-align:center}
+
+/* ---------- ACT 0 : source desk ---------- */
+.desk{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:12px;min-height:290px}
+.src{position:relative;border:1px solid var(--line);border-radius:11px;background:var(--surface);padding:12px 13px;
+  box-shadow:var(--shadow);cursor:grab;transition:transform .22s var(--ease),box-shadow .22s var(--ease),opacity .35s;
+  animation:floatIn .55s var(--ease) both;user-select:none}
+@keyframes floatIn{from{opacity:0;transform:translateY(16px) rotate(-1.2deg)}to{opacity:1;transform:none}}
+.src:hover{transform:translateY(-3px) rotate(-.4deg);box-shadow:var(--shadow2);z-index:3}
+.src.dragging{cursor:grabbing;z-index:9;box-shadow:var(--shadow2);transition:none}
+.src.ingested{opacity:.28;transform:scale(.94);pointer-events:none}
+.src .srow{display:flex;align-items:center;gap:8px}
+.src .ico{width:28px;height:30px;border-radius:5px;display:grid;place-items:center;font-family:var(--font-mono);font-size:9px;font-weight:700;color:#fff;flex:none}
+.src .ico.doc{background:var(--c2)} .src .ico.db{background:var(--c1)} .src .ico.talk{background:var(--c3)} .src .ico.mail{background:var(--c4)}
+.src .name{font-size:13px;font-weight:600;line-height:1.35}
+.src .meta{font-family:var(--font-mono);font-size:10px;color:var(--faint);margin-top:7px}
+.src .badge{display:inline-block;margin-top:8px;font-size:10.5px;padding:2px 7px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);color:var(--muted)}
+.src .excerpt{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);font-size:12px;color:var(--ink2);line-height:1.7;white-space:pre-line;display:none}
+.src .excerpt .note{display:block;margin-top:8px;font-size:11px;color:var(--warn)}
+.src.open .excerpt{display:block;animation:actIn .3s var(--ease)}
+.src.open{cursor:default;grid-column:span 2;z-index:4}
+.hopper{margin-top:16px;display:flex;align-items:center;gap:14px;padding:13px 15px;border:1px dashed var(--line2);border-radius:11px;background:var(--surface2)}
+.hopper .mouth{width:54px;height:44px;flex:none;border-radius:9px;border:2px solid var(--accent);background:var(--accent-soft);
+  display:grid;place-items:center;font-family:var(--font-mono);font-size:10px;color:var(--accent-ink);transition:.25s}
+.hopper .mouth.pulse{animation:pulse .6s var(--ease)}
+@keyframes pulse{0%{transform:scale(1)}45%{transform:scale(1.18);box-shadow:0 0 0 8px var(--accent-soft)}100%{transform:scale(1)}}
+.hopper .htxt{font-size:12.5px;color:var(--muted);flex:1}
+.hopper .htxt b{color:var(--ink);display:block;font-size:13.5px}
+
+/* ---------- ACT 1 : scanner + fragments ---------- */
+.scanbox{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px}
+@media(max-width:900px){.scanbox{grid-template-columns:1fr}}
+.docview{position:relative;border:1px solid var(--line);border-radius:11px;background:var(--surface2);padding:14px;overflow:hidden;min-height:250px}
+.docview .dv-head{font-family:var(--font-mono);font-size:10px;color:var(--faint);letter-spacing:.08em;margin-bottom:10px}
+.docline{font-size:12.5px;color:var(--ink2);line-height:1.95;padding:2px 6px;border-radius:5px;white-space:pre-wrap}
+.docline.hit{background:var(--accent-soft);color:var(--accent-ink)}
+.docview .scanline{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  box-shadow:0 0 14px 2px var(--accent);opacity:0;pointer-events:none}
+.docview.scanning .scanline{opacity:1;animation:scan 1.5s linear}
+@keyframes scan{from{top:6%}to{top:94%}}
+.frag-grid{display:grid;gap:9px}
+.frag{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px;cursor:pointer;
+  transition:.2s var(--ease);animation:rise .45s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.frag:hover{border-color:var(--accent);transform:translateX(2px)}
+.frag .fh{display:flex;justify-content:space-between;gap:8px;font-family:var(--font-mono);font-size:10px;color:var(--faint)}
+.frag .ft{font-size:12.5px;color:var(--ink2);margin-top:5px;line-height:1.6}
+.frag.good-pick{border-color:var(--ok);background:var(--ok-soft)}
+.frag.good-pick .fh{color:var(--ok)}
+.frag.wrong-pick{animation:shake .4s}
+.frag.picked .fh::after{content:'✓ 已引用';color:var(--ok);font-weight:700}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+.shake{animation:shake .4s var(--ease)!important}
+
+/* ---------- ACT 2 : claims ---------- */
+.claim-list{display:grid;gap:11px}
+.claim{border:1px solid var(--line);border-radius:11px;background:var(--surface);padding:12px 14px;animation:rise .45s var(--ease) both}
+.claim .ct{font-size:13.5px;color:var(--ink);line-height:1.6}
+.claim .cf{font-family:var(--font-mono);font-size:10px;color:var(--faint);margin-top:5px}
+.claim .cf::before{content:'↳ ';color:var(--accent)}
+.mods{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.mod-btn{border:1px solid var(--line2);background:var(--surface2);border-radius:7px;padding:5px 9px;font-size:11.5px;color:var(--muted);transition:.2s}
+.mod-btn:hover{border-color:var(--accent);color:var(--ink)}
+.mod-btn b{font-family:var(--font-mono);font-weight:500;margin-right:5px}
+.mod-btn[data-mod="normative"] b{color:var(--c1)}
+.mod-btn[data-mod="descriptive"] b{color:var(--c3)}
+.mod-btn[data-mod="observational"] b{color:var(--c2)}
+.mod-btn[data-mod="hypothetical"] b{color:var(--c4)}
+.mod-btn.correct{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.mod-btn.wrongpick{animation:shake .4s;border-color:var(--bad);color:var(--bad)}
+.claim.solved{border-color:var(--ok);background:var(--ok-soft)}
+.claim .why-line{display:none;margin-top:9px;font-size:12px;color:var(--ink2);line-height:1.65}
+.claim.solved .why-line{display:block;animation:actIn .3s}
+.claim.solved .mods{display:none}
+.prov{margin-top:14px;border:1px dashed var(--line2);border-radius:10px;padding:11px 13px;background:var(--surface2);display:none}
+.prov.show{display:block;animation:actIn .4s}
+.prov .chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.prov .chain span{border:1px solid var(--line2);border-radius:6px;padding:4px 8px;background:var(--surface)}
+.prov .chain i{color:var(--accent);font-style:normal}
+.prov p{margin:9px 0 0;font-size:12px;color:var(--muted)}
+
+/* ---------- ACT 3 : concept alignment ---------- */
+.align{display:grid;grid-template-columns:1fr 260px 1fr;gap:14px;align-items:center}
+@media(max-width:900px){.align{grid-template-columns:1fr}}
+.field-pool{display:grid;gap:9px}
+.field{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px;cursor:pointer;transition:.2s var(--ease)}
+.field:hover{border-color:var(--accent);transform:translateX(3px)}
+.field .fk{font-family:var(--font-mono);font-size:12.5px;color:var(--accent-ink);font-weight:600}
+.field .fs{font-size:11.5px;color:var(--muted);margin-top:3px}
+.field.merged{opacity:.3;pointer-events:none;text-decoration:line-through}
+.concept-core{border:2px solid var(--accent);border-radius:14px;background:var(--accent-soft);padding:16px 13px;text-align:center;min-height:150px;transition:.25s}
+.concept-core.bump{animation:pulse .6s var(--ease)}
+.concept-core .ct{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--accent-ink)}
+.concept-core .cs{font-size:11.5px;color:var(--muted);margin-top:3px}
+.aliases{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:12px}
+.alias{font-family:var(--font-mono);font-size:10px;padding:3px 7px;border-radius:6px;background:var(--surface);border:1px solid var(--line2);color:var(--ink2);animation:pop .4s var(--ease)}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.alias-empty{font-size:11px;color:var(--faint);margin-top:12px}
+.trap{margin-top:16px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:0 11px 11px 0;padding:13px 15px;background:var(--warn-soft)}
+.trap h4{margin:0 0 5px;font-size:13.5px;font-weight:600}
+.trap p{margin:0;font-size:12.5px;color:var(--ink2);line-height:1.7}
+.trap .opts{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.trap .fb{margin-top:10px;font-size:12.5px;line-height:1.65;display:none}
+.trap .fb.show{display:block;animation:actIn .3s}
+.trap .fb.bad{color:var(--bad)} .trap .fb.good{color:var(--ok)}
+.trap.solved{border-left-color:var(--ok);background:var(--ok-soft)}
+
+/* ---------- ACT 4 : conflicts ---------- */
+.conflicts{display:grid;grid-template-columns:1fr 46px 1fr;gap:10px;align-items:stretch}
+@media(max-width:760px){.conflicts{grid-template-columns:1fr}.conflicts .vs{align-self:center;text-align:center}}
+.conf-card{border:1px solid var(--line);border-radius:11px;background:var(--surface);padding:13px}
+.conf-card .ch{font-family:var(--font-mono);font-size:10px;color:var(--faint);margin-bottom:7px}
+.conf-card .cq{font-size:13.5px;line-height:1.7}
+.conf-card .cm{margin-top:9px;font-size:11.5px;color:var(--muted)}
+.vs{display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;color:var(--bad);font-weight:700}
+.dims{display:flex;gap:7px;flex-wrap:wrap;margin-top:15px}
+.dim{border:1px solid var(--line2);border-radius:8px;background:var(--surface2);padding:8px 11px;font-size:12.5px;color:var(--ink2);transition:.2s}
+.dim:hover{border-color:var(--accent);transform:translateY(-2px)}
+.dim b{font-family:var(--font-mono);font-size:10.5px;color:var(--faint);display:block}
+.dim.badpick{animation:shake .4s;border-color:var(--bad);color:var(--bad)}
+.dim.goodpick{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.resolve{margin-top:15px;border:1px solid var(--ok);border-radius:11px;background:var(--ok-soft);padding:13px;display:none}
+.resolve.show{display:block;animation:actIn .45s}
+.resolve .rr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+@media(max-width:700px){.resolve .rr{grid-template-columns:1fr}}
+.metric{border:1px solid var(--line2);border-radius:9px;background:var(--surface);padding:10px 12px}
+.metric .mn{font-family:var(--font-mono);font-size:12px;color:var(--accent-ink)}
+.metric .ms{font-size:11.5px;color:var(--muted);margin-top:4px}
+.resolve .rn{font-size:12px;color:var(--ink2);line-height:1.7}
+
+/* ---------- ACT 5 : terminal + AST ---------- */
+.compile-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:14px}
+@media(max-width:950px){.compile-grid{grid-template-columns:1fr}}
+.term{background:var(--term);color:var(--term-ink);border:1px solid var(--term-line);border-radius:11px;
+  padding:13px 14px;font-family:var(--font-mono);font-size:11.5px;line-height:1.85;min-height:296px;max-height:340px;overflow:auto}
+.term .ln{white-space:pre-wrap;word-break:break-word}
+.term .dim{color:var(--term-dim)} .term .ok{color:var(--term-ok)} .term .bad{color:var(--term-bad)}
+.term .warn{color:var(--term-warn)} .term .acc{color:var(--term-acc)}
+.term .caret{display:inline-block;width:7px;height:13px;background:var(--term-acc);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.ast{border:1px solid var(--line);border-radius:11px;padding:13px 14px;background:var(--surface)}
+.ast h4{margin:0 0 4px;font-size:13.5px}
+.ast .ast-desc{font-size:11.5px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.ast-row{margin-bottom:9px}
+.ast-row .rk{font-family:var(--font-mono);font-size:10px;color:var(--faint);letter-spacing:.06em;margin-bottom:5px}
+.ast-opts{display:flex;gap:5px;flex-wrap:wrap}
+.ast-opt{border:1px solid var(--line2);border-radius:6px;background:var(--surface2);padding:4px 8px;
+  font-family:var(--font-mono);font-size:10.5px;color:var(--muted);transition:.2s}
+.ast-opt:hover{border-color:var(--accent);color:var(--ink)}
+.ast-opt.sel{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.ast .fb{margin-top:9px;font-size:12px;line-height:1.6;display:none}
+.ast .fb.show{display:block}
+.ast .fb.bad{color:var(--bad)} .ast .fb.good{color:var(--ok)}
+
+/* ---------- ACT 6 : final graph ---------- */
+.final{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px}
+@media(max-width:1050px){.final{grid-template-columns:1fr}}
+.graph{border:1px solid var(--line);border-radius:11px;background:
+  radial-gradient(600px 300px at 50% 20%,var(--accent-soft),transparent 70%),var(--surface2);overflow:hidden}
+.graph svg{display:block;width:100%;height:auto}
+.edge{fill:none;stroke:var(--line2);stroke-width:1.6;stroke-dasharray:400;stroke-dashoffset:400}
+.graph.drawn .edge{animation:draw 1.1s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.edge.guard{stroke-dasharray:5 5}
+.graph.drawn .edge.guard{animation:draw 1.1s var(--ease) forwards}
+.edge.hi{stroke:var(--accent);stroke-width:2.4}
+.elabel{font-family:var(--font-mono);font-size:9px;fill:var(--faint)}
+.node{cursor:pointer}
+.node rect{fill:var(--surface);stroke:var(--line2);stroke-width:1.4;rx:9;transition:.2s}
+.node .ncn{font-family:var(--font-ui);font-size:13px;font-weight:600;fill:var(--ink)}
+.node .nen{font-family:var(--font-mono);font-size:9.5px;fill:var(--faint)}
+.node:hover rect,.node.sel rect{stroke:var(--accent);stroke-width:2.2;fill:var(--accent-soft)}
+.node.sel .ncn{fill:var(--accent-ink)}
+/* SVG <g> keeps its transform="translate(...)" presentation attribute only if
+   CSS never sets transform on it — so the entrance animation is opacity-only. */
+@keyframes nodeIn{from{opacity:0}to{opacity:1}}
+.node{animation:nodeIn .5s var(--ease) both}
+.detail{border:1px solid var(--line);border-radius:11px;padding:13px;background:var(--surface);min-height:260px}
+.detail .dh{font-family:var(--font-mono);font-size:10px;letter-spacing:.07em;color:var(--faint);margin-bottom:9px}
+.detail .dt{font-family:var(--font-display);font-size:17px;font-weight:600;margin-bottom:3px}
+.detail .dtype{font-family:var(--font-mono);font-size:10px;color:var(--accent-ink);margin-bottom:10px}
+.prov-step{border-left:2px solid var(--line2);padding:6px 0 6px 11px;margin-bottom:7px;opacity:.25;transition:.45s var(--ease)}
+.prov-step.lit{opacity:1;border-left-color:var(--accent)}
+.prov-step .pl{font-family:var(--font-mono);font-size:9.5px;color:var(--faint)}
+.prov-step .pv{font-size:12px;color:var(--ink2);line-height:1.5;margin-top:2px}
+.projection{margin-top:14px;border:1px solid var(--line);border-radius:11px;padding:12px;background:var(--surface)}
+.projection .ph{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.projection .seg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.projection .seg button{border:0;border-right:1px solid var(--line);background:transparent;padding:5px 10px;font-size:11.5px;color:var(--muted)}
+.projection .seg button:last-child{border-right:0}
+.projection .seg button[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
+.projection .out{margin-top:10px;min-height:92px}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi .k{border:1px solid var(--line);border-radius:8px;padding:9px;background:var(--surface2)}
+.kpi .kn{font-family:var(--font-mono);font-size:19px;color:var(--accent-ink)}
+.kpi .kl{font-size:11px;color:var(--muted)}
+.code{background:var(--term);color:var(--term-ink);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:10.5px;line-height:1.75;white-space:pre-wrap}
+.code .acc{color:var(--term-acc)} .code .ok{color:var(--term-ok)} .code .dim{color:var(--term-dim)}
+.tools{display:grid;gap:7px}
+.tool{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--surface2)}
+.tool .tn{font-family:var(--font-mono);font-size:11px;color:var(--ink2)}
+.tool .tt{font-size:10px;padding:2px 7px;border-radius:999px;border:1px solid var(--line2);color:var(--muted)}
+.tool .tt.ok{color:var(--ok);border-color:var(--ok)} .tool .tt.warn{color:var(--warn);border-color:var(--warn)}
+.answer{margin-top:14px;border:1px solid var(--line);border-radius:11px;padding:13px;background:var(--surface)}
+.answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:11px;display:none}
+.answer-grid.show{display:grid;animation:actIn .5s}
+@media(max-width:760px){.answer-grid.show{grid-template-columns:1fr}}
+.acol{border:1px solid var(--line);border-radius:9px;padding:11px;background:var(--surface2)}
+.acol.bad{border-color:var(--bad);background:var(--bad-soft)}
+.acol.good{border-color:var(--ok);background:var(--ok-soft)}
+.acol .ah{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:7px}
+.acol .ab{font-size:12.5px;line-height:1.75;color:var(--ink2)}
+.acol .ab code{font-family:var(--font-mono);font-size:11px;color:var(--accent-ink)}
+/* Do not use a bare .done class here: rail items and task list items also use
+   `done` as a state class, and a global .done { display:none } would hide them. */
+.journey-done{margin-top:14px;border:1px solid var(--ok);border-radius:12px;padding:15px;background:var(--ok-soft);text-align:center;display:none;position:relative;overflow:hidden}
+.journey-done.show{display:block;animation:actIn .5s}
+.journey-done h3{font-family:var(--font-display);font-size:22px;margin:0 0 5px;color:var(--ok)}
+.journey-done p{margin:0;font-size:12.5px;color:var(--ink2)}
+.confetti{position:absolute;width:7px;height:11px;top:-14px;animation:fall 1.8s linear forwards}
+@keyframes fall{to{transform:translateY(180px) rotate(540deg);opacity:0}}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);z-index:99;
+  padding:10px 16px;border-radius:10px;background:var(--ink);color:var(--ground);font-size:13px;
+  box-shadow:0 12px 34px -12px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.28s var(--ease);max-width:min(90vw,460px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.bad{background:var(--bad);color:#fff}
+.toast.ok{background:var(--ok);color:#fff}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01s!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="mark">O</div>
+      <div>
+        <h1>从 0 到 1：一份 Ontology 的诞生</h1>
+        <div class="sub">INTERACTIVE PREVIEW · EVIDENCE → CANONICAL ONTOLOGY</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn--sm" id="themeBtn" title="切换明暗主题">◐ 主题</button>
+      <button class="btn btn--sm" id="autoBtn" title="自动演示整条流水线">▶ 自动演示</button>
+      <button class="btn btn--sm btn--ghost" id="resetBtn">↺ 重置</button>
+    </div>
+  </header>
+
+  <div class="mission" id="mission">
+    <span class="tag">贯穿任务</span>
+    <div class="q">读者带着一个真实需求走进来：<b>「帮我列出被检验报告卡住、没法出院的床位，并通知后勤安排终末消毒」</b></div>
+    <span class="state" id="missionState">等待本体回答…</span>
+  </div>
+
+  <nav class="rail" id="rail" aria-label="编译流水线步骤"></nav>
+
+  <div class="split">
+    <main class="panel">
+      <div class="stage-head" id="stageHead"></div>
+      <div class="acts" id="acts">
+
+        <!-- ============ ACT 0 ============ -->
+        <section class="act on" data-i="0">
+          <p class="act-lead">桌上这 7 份东西，就是项目的全部起点：<em>规章、通知、访谈、三套异构数据库、还有一句随口的需求</em>。点开看看里面写了什么，也可以拖一拖它们 —— 此刻没有任何「模型」，只有互相矛盾、格式各异的原始资料。</p>
+          <p class="mini-title">SOURCE / 原始资料 · 点卡片展开原文，可拖动</p>
+          <div class="desk" id="desk"></div>
+          <div class="hopper">
+            <div class="mouth" id="mouth">IN</div>
+            <div class="htxt"><b>编译器入口 · Source Ingestor</b>先登记原文与 Hash，之后每一步都必须能回溯到这里。</div>
+            <button class="btn btn--primary" id="ingestBtn">把这 7 份材料送进编译器 →</button>
+          </div>
+          <div class="bar"><span class="status" id="ingestStatus">尚未登记任何资料。</span><span class="hint">提示：violation 观察、规范、字段定义混在一起，是这个阶段最大的坑。</span></div>
+        </section>
+
+        <!-- ============ ACT 1 ============ -->
+        <section class="act" data-i="1">
+          <p class="act-lead">编译器不改写原文，只把它切成<em>可精确定位、可引用的最小单元：资料片段（Fragment）</em>。但并不是每一行都算证据 —— 页眉、日志时间戳、附件说明都只是噪声。请亲手挑出 3 条真正含业务断言的片段。</p>
+          <div class="scanbox">
+            <div class="docview" id="docView">
+              <div class="dv-head">SOURCE READER / SOP v3 · 绿色通道 · 交班访谈</div>
+              <div id="docLines"></div>
+              <div class="scanline"></div>
+            </div>
+            <div>
+              <p class="mini-title">FRAGMENTS / 点击标记可引用的片段</p>
+              <div class="frag-grid" id="fragGrid"></div>
+            </div>
+          </div>
+          <div class="bar">
+            <button class="btn btn--primary" id="scanBtn">① 扫描并切分资料</button>
+            <button class="btn btn--ghost btn--sm" id="autoFindBtn">自动定位（看答案）</button>
+            <span class="status" id="fragStatus">等待扫描。</span>
+          </div>
+        </section>
+
+        <!-- ============ ACT 2 ============ -->
+        <section class="act" data-i="2">
+          <p class="act-lead">从片段里读出<em>事实主张（Claim）</em>，并给每条标注模态。这一步决定它有没有资格进入本体：<em>「发生过」不等于「被允许」</em>。请给 4 条主张各选一个正确的模态。</p>
+          <div class="claim-list" id="claimList"></div>
+          <div class="prov" id="provBox">
+            <p class="mini-title">EVIDENCE GRAPH / 每条主张都连得回原文</p>
+            <div class="chain"><span>Source：出院管理 SOP v3</span><i>→</i><span>Fragment：§2.3 · a3f9c1</span><i>→</i><span>Claim C-001 · normative</span></div>
+            <p>证据图保留矛盾与不确定性；它回答的是「我们为什么相信这件事」，不是知识图谱，也不是 RAG 索引。</p>
+          </div>
+          <div class="bar"><span class="status" id="claimStatus">0 / 4 条主张已标注。</span><span class="hint">normative 规范 · descriptive 描述 · observational 观察 · hypothetical 假设</span></div>
+        </section>
+
+        <!-- ============ ACT 3 ============ -->
+        <section class="act" data-i="3">
+          <p class="act-lead">同一个「住院就诊」，三套系统有三个名字。概念注册表要给业务概念一个<em>稳定身份</em>，把跨源字段挂成别名。点击左侧 3 个字段，把它们对齐到中间的 Encounter。</p>
+          <div class="align">
+            <div class="field-pool" id="fieldPool"></div>
+            <div class="concept-core" id="conceptCore">
+              <div class="ct">Encounter</div>
+              <div class="cs">住院就诊 · 稳定 ID <span class="mono">C-017</span></div>
+              <div class="aliases" id="aliases"></div>
+              <div class="alias-empty" id="aliasEmpty">尚无别名</div>
+            </div>
+            <div style="font-size:12.5px;color:var(--muted);line-height:1.8">
+              <p class="mini-title">WHY / 为什么需要稳定 ID</p>
+              如果每次查询都靠字段名猜，Agent 就得同时记住三套系统的方言。<br><br>
+              有了稳定 ID，<code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-ink)">visit_no / inp_id / encounter_id</code> 只是同一个概念的三个别名 <code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-ink)">LINK_ALIAS</code>，模型层只有一份定义。
+            </div>
+          </div>
+          <div class="trap" id="trap">
+            <h4>⚠ 陷阱题：患者 ID 与医保付款人 ID 在 95% 的记录里数值相同，要怎么处理？</h4>
+            <p>直觉会说「合并吧」。但概念一旦合并，Payer 的动作就会错误地绑到 Patient 上，而且下游所有生成物都跟着错。</p>
+            <div class="opts" id="trapOpts">
+              <button class="btn btn--sm" data-trap="LINK_ALIAS">LINK_ALIAS 同义关联</button>
+              <button class="btn btn--sm" data-trap="MERGE_CONCEPT">MERGE_CONCEPT 概念合并</button>
+              <button class="btn btn--sm" data-trap="KEEP_SEPARATE">保持两个独立概念</button>
+            </div>
+            <div class="fb" id="trapFb"></div>
+          </div>
+          <div class="bar"><span class="status" id="alignStatus">0 / 3 个字段已对齐。</span></div>
+        </section>
+
+        <!-- ============ ACT 4 ============ -->
+        <section class="act" data-i="4">
+          <p class="act-lead">两条主张看起来互相打架。<em>消解不等于删掉一条</em> —— 先判断它们到底在哪一维上不同。选一个维度试试，选错会展示真实后果，可以反复试。</p>
+          <div class="conflicts">
+            <div class="conf-card">
+              <div class="ch">CLAIM C-001 · SOP v3 §4.1 · a3f9c1 · 2024-03</div>
+              <div class="cq">「出院准备时长，自<b>医嘱下达</b>起计算至患者离院。」</div>
+              <div class="cm">适用范围 scope：全院普通住院 · 规范性 normative · 医务处发布</div>
+            </div>
+            <div class="vs">VS</div>
+            <div class="conf-card">
+              <div class="ch">CLAIM C-002 · 日间手术绿色通道 §1.2 · c02d8e · 2025-06</div>
+              <div class="cq">「出院准备时长，自<b>护理评估完成</b>起算；主治单签即可放行。」</div>
+              <div class="cm">适用范围 scope：仅日间手术 · 规范性 normative · 门诊办公室发布</div>
+            </div>
+          </div>
+          <p class="mini-title" style="margin-top:16px">RECONCILE / 按哪个维度消解？</p>
+          <div class="dims" id="dims"></div>
+          <div class="resolve" id="resolve">
+            <div class="rn"><b>✓ 正确：差异在 Scope（适用范围），不是谁对谁错。</b>两条都保留，拆成两个带 scope 的指标；证据图里仍记录它们曾经冲突，以及这次裁决的依据。</div>
+            <div class="rr">
+              <div class="metric"><div class="mn">Metric: discharge_prep_hours</div><div class="ms">起点 = 医嘱下达 · scope = 全院普通住院 · 源自 C-001</div></div>
+              <div class="metric"><div class="mn">Metric: day_surgery_prep_hours</div><div class="ms">起点 = 护理评估完成 · scope = 日间手术 · 源自 C-002</div></div>
+            </div>
+            <div class="rn" style="margin-top:10px">另外，「夜班未签字先放行」是 observational 违规观察 → 被标记为 <b>BLOCKED</b>，留在证据图里供审计，绝不写进权威本体。此刻产出的是<b>候选本体</b>，还没有生产执行授权。</div>
+          </div>
+          <div class="bar"><span class="status" id="reconcileStatus">等待裁决。</span></div>
+        </section>
+
+        <!-- ============ ACT 5 ============ -->
+        <section class="act" data-i="5">
+          <p class="act-lead">候选本体要过<em>确定性编译器</em>这一关：类型、稳定 ID、状态机、策略 AST 全部静态校验。注意终端里那条 FAIL —— 自然语言写成的「仅主治医师可确认出院」不能当执行规则，请把它组装成类型化 AST。</p>
+          <div class="compile-grid">
+            <div class="term" id="term"></div>
+            <div class="ast">
+              <h4>Policy AST 组装台</h4>
+              <div class="ast-desc">把自然语言规则拆成「主体 + 前置条件 + 动作」三段。只有全部选对，编译器才会放行。</div>
+              <div class="ast-row" data-k="role"><div class="rk">WHO / 主体</div><div class="ast-opts" id="opt-role"></div></div>
+              <div class="ast-row" data-k="state"><div class="rk">WHEN / 前置条件</div><div class="ast-opts" id="opt-state"></div></div>
+              <div class="ast-row" data-k="action"><div class="rk">DO / 受控动作</div><div class="ast-opts" id="opt-action"></div></div>
+              <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:11px">
+                <button class="btn btn--primary btn--sm" id="compileAstBtn">提交 AST 并重新编译</button>
+                <button class="btn btn--ghost btn--sm" id="llmFreeBtn">交给 LLM 自由判断</button>
+              </div>
+              <div class="fb" id="astFb"></div>
+            </div>
+          </div>
+          <div class="bar"><span class="status" id="compileStatus">等待类型化策略通过。</span><span class="hint">生产语义永远不由 LLM 拍板：LLM 负责提议，编译器负责裁决。</span></div>
+        </section>
+
+        <!-- ============ ACT 6 ============ -->
+        <section class="act" data-i="6">
+          <p class="act-lead">现在它不再是文档，而是一份<em>类型安全、带完整证据链、已签署的权威本体（Canonical Ontology v1.2）</em>。点任意节点查看它从哪份资料一路走来；切换投影视图，看同一份模型如何服务不同角色。</p>
+          <div class="final">
+            <div class="graph" id="graphWrap"><svg id="graph" viewBox="0 0 660 400" role="img" aria-label="权威本体领域图"></svg></div>
+            <div class="detail" id="nodeDetail">
+              <div class="dh">PROVENANCE / 溯源链</div>
+              <div style="font-size:12.5px;color:var(--muted);line-height:1.75">点击左侧任一节点，查看它是由哪份原始资料、哪个片段、哪条主张编译而来。<br><br>这就是「可追溯」的具体含义：模型里没有一句凭空出现的话。</div>
+            </div>
+          </div>
+          <div class="projection">
+            <div class="ph">
+              <div><p class="mini-title" style="margin:0">PROJECTION / 同一份本体的三种投影</p></div>
+              <div class="seg" id="projSeg">
+                <button data-view="biz" aria-pressed="true">业务视图</button>
+                <button data-view="dev" aria-pressed="false">工程视图</button>
+                <button data-view="agent" aria-pressed="false">Agent 视图</button>
+              </div>
+            </div>
+            <div class="out" id="projOut"></div>
+          </div>
+          <div class="answer">
+            <button class="btn btn--accent" id="answerBtn">▶ 用这份本体回答最初的那个问题</button>
+            <div class="answer-grid" id="answerGrid">
+              <div class="acol bad">
+                <div class="ah">✕ 直接把一堆文档丢给 LLM / 纯 RAG</div>
+                <div class="ab">「大概有 2～3 张床位被检验结果影响，建议让 Agent 直接释放床位并通知保洁。」<br><br>❌ 字段名靠猜（<code>visit_no / inp_id</code> 混用）<br>❌ 把夜班违规习惯当成了合法规则<br>❌ 绕过了主治医师确认与权限校验</div>
+              </div>
+              <div class="acol good">
+                <div class="ah">✓ 经权威本体守卫的 Agent</div>
+                <div class="ab">命中 <code>Bed B-12-03 / B-12-07</code>：状态 <code>awaiting_lab</code> 且 <code>Encounter.medically_fit = false</code>。<br><br>✅ <code>ExpeditePendingLab</code> 已提交，待主治医师授权<br>✅ <code>ScheduleBedCleaning</code> 仅在 <code>ConfirmMedicallyFit</code> 之后排队<br>✅ 每个动作留有 modelVersion + 证据链 ID 的审计事件</div>
+              </div>
+            </div>
+          </div>
+          <div class="journey-done" id="doneBanner">
+            <h3>0 → 1 完成</h3>
+            <p>7 份杂乱资料 → 12 个片段 → 9 条主张 → 6 个概念 → 8 条关系 → 3 条策略 → 1 份权威本体。<br>而且每一个节点，都能走回最初那份文件。</p>
+          </div>
+          <div class="bar"><span class="status" id="finalStatus">点一个节点、切换一次视图、再运行对比，就算走完全程。</span></div>
+        </section>
+      </div>
+    </main>
+
+    <aside class="panel coach" id="coach"></aside>
+  </div>
+
+  <footer class="bottom">
+    <div class="funnel" id="funnel"></div>
+    <div class="controls">
+      <button class="btn" id="prevBtn">← 上一步</button>
+      <span class="pos" id="posLabel"></span>
+      <span class="skip" id="skipBtn">跳过本步任务 →</span>
+      <button class="btn btn--primary" id="nextBtn">下一步 →</button>
+    </div>
+  </footer>
+  <div class="foot-note">PREVIEW v0.1 · 单文件交互原型 · 术语与案例对齐 GLOSSARY.md / 智慧医院出院协同 · 后续可拆为 VitePress Vue 组件</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ------------------------------------------------------------------ data */
+const RAIL = [
+  {n:'00', label:'原始资料', file:'sources/*.json'},
+  {n:'01', label:'资料片段', file:'fragments/*.json'},
+  {n:'02', label:'事实主张', file:'claims.json'},
+  {n:'03', label:'概念对齐', file:'concept-registry.json'},
+  {n:'04', label:'冲突消解', file:'candidate-ontology.json'},
+  {n:'05', label:'类型编译', file:'canonical-ontology.json'},
+  {n:'06', label:'权威本体', file:'v1.2 · signed'}
+];
+
+const STEPS = [
+  { kicker:'STEP 00 · INGEST', title:'一桌子的「需求」与「文件」',
+    lede:'先承认现实：起点不是模型，是互相矛盾、格式各异的原始资料。',
+    what:'把 7 份异构材料（规章、通知、访谈、三套数据库、一句需求）原样登记，记录来源与 Hash。原文不做任何改写或总结。',
+    why:'一旦让 LLM 先「帮忙整理成文档」，原始措辞、适用范围和矛盾点就被抹平了。后面发现结论有问题时，将再也找不到它从哪来。',
+    tip:'试着点开《交班访谈》，里面那句「夜班有时候没签字就先放床」就是后面最大的陷阱。',
+    tasks:['把 7 份材料送进编译器'], output:'sources/*.json（含原始 Hash）' },
+  { kicker:'STEP 01 · FRAGMENT', title:'把资料切成可引用的最小单元',
+    lede:'资料片段（Fragment）：能精确定位到某一段、某一行、某个时间戳的原文。',
+    what:'扫描原文，切出 12 个片段；只有真正含业务断言的片段才值得进入下一环节。页眉、附件说明、日志时间戳都是噪声。',
+    why:'如果证据的粒度是「一整份 PDF」，那么每次引用都无法验证，也没法知道一条规则究竟出自第几条第几款。',
+    tip:'点选 3 条含业务断言的片段；点错了会抖动并告诉你为什么。',
+    tasks:['扫描并切分资料','标记 3 条有效片段'], output:'fragments/*.json（12 个片段，3 条被引用）' },
+  { kicker:'STEP 02 · CLAIM', title:'从片段里读出「事实主张」',
+    lede:'Claim 带两件关键行李：模态（normative / descriptive / observational / hypothetical）和适用范围。',
+    what:'把片段转成结构化断言，并标注模态。消解前允许重复、允许冲突，全部先留在证据图里。',
+    why:'纯 RAG 分不清「规范要求」和「历史上有人违规这么干」。把 observational 误标成 normative，等于让夜班违规习惯变成合法规则。',
+    tip:'最容易错的是第 3 条：它描述发生过的事，不代表被允许。',
+    tasks:['给 4 条主张标注正确模态'], output:'claims.json + 证据图雏形' },
+  { kicker:'STEP 03 · CONCEPT REGISTRY', title:'给业务概念一个稳定身份',
+    lede:'HIS 的 visit_no、EMR 的 inp_id、LIS 的 encounter_id，其实是同一个业务概念。',
+    what:'建立概念注册表：稳定 ID + 正式名称 + 别名。严格区分「同义词关联 LINK_ALIAS」与「概念合并 MERGE_CONCEPT」。',
+    why:'「95% 的记录里数值相同」只是数据巧合，不是概念相同。错误合并会污染所有下游生成物，而且很难回滚。',
+    tip:'先把 3 个字段对齐，再回答那道陷阱题。',
+    tasks:['对齐 3 个跨源字段','避开「95% 相同就合并」的陷阱'], output:'concept-registry.json（C-017 Encounter）' },
+  { kicker:'STEP 04 · RECONCILE', title:'消解冲突，而不是删掉矛盾',
+    lede:'两条规则打架时，先找它们在哪一维不同：Identity / Scope / Time / Authority / Semantics。',
+    what:'按适用范围把一条口径拆成两个指标，两条主张都保留；违规观察被标记 BLOCKED，留在证据图供审计。',
+    why:'直接用「新文件覆盖旧文件」会让全院口径被日间手术的特例带偏；把冲突物理删除，则审计链断裂。',
+    tip:'注意两份文件的适用范围（scope）写在哪里。',
+    tasks:['用正确的维度消解冲突'], output:'candidate-ontology.json（候选，未授权）' },
+  { kicker:'STEP 05 · TYPE CHECK', title:'确定性编译器把关，LLM 不能拍板',
+    lede:'语义发现引擎负责提议，语义编译引擎 100% 确定性地裁决。',
+    what:'校验 EntityType / Relation / StateMachine / Policy AST。自然语言字符串不能充当执行规则，必须替换为类型化 AST 并绑定受控动作。',
+    why:'「仅主治医师可确认出院」写进提示词，上下文一长就可能被 LLM 忽略；写成 AST 则由后端守卫强制执行，无法通过话术绕过。',
+    tip:'点一下「交给 LLM 自由判断」，看看会发生什么。',
+    tasks:['把自然语言规则组装成策略 AST'], output:'canonical-ontology.json · v1.2 · signed' },
+  { kicker:'STEP 06 · CANONICAL ONTOLOGY', title:'1 份权威本体，服务所有角色',
+    lede:'模型是唯一事实源；看板、代码、Agent 工具都只是它的投影（Projection）。',
+    what:'探索领域图与溯源链，切换业务 / 工程 / Agent 三视图，最后用本体回答开头那个问题。',
+    why:'如果每个角色各维护一套模型，系统必然漂移。投影式编辑保证「改一处、处处一致」，而运行时的每个动作都受策略约束。',
+    tip:'点击节点能看到它从哪份文件一路走来 —— 这就是从 0 到 1 的全部证据。',
+    tasks:['点开一个节点查看溯源','切换一次投影视图','运行答案对比'], output:'Ontology Context Package + 受控 Action' }
+];
+
+const SOURCES = [
+  {id:'s1', ico:'PDF', cls:'doc', name:'出院管理 SOP v3', meta:'医务处 · 2024-03 · 12 页', badge:'规范性规章',
+   excerpt:'第 2.3 条  患者出院须由主治医师签署《医疗适合出院确认》，护理完成出院宣教后方可释放床位。\n第 4.1 条  出院准备时长自医嘱下达起计算至患者离院。',
+   note:'看起来最权威，但它只覆盖普通住院。'},
+  {id:'s2', ico:'DOC', cls:'doc', name:'日间手术绿色通道通知', meta:'门诊办公室 · 2025-06 · 3 页', badge:'规范性规章',
+   excerpt:'§1.2  日间手术患者由主治医师单签即可放行；出院准备时长自护理评估完成起算。\n§2.1  本规范仅适用于日间手术中心。',
+   note:'「单签」与 SOP 的「双签」看着矛盾，其实适用范围不同。'},
+  {id:'s3', ico:'TXT', cls:'talk', name:'住院总交班访谈转写', meta:'录音 08:41 · 护理交班', badge:'观察性资料',
+   excerpt:'「夜班忙的时候，有时候没等签字就先把床位放掉了，第二天再补。」\n「检验报告晚出来，床就一直卡着。」',
+   note:'这是发生过的事实（observational），不是被允许的规则。'},
+  {id:'s4', ico:'SQL', cls:'db', name:'HIS 表结构快照', meta:'his.inpatient_visit', badge:'结构化数据',
+   excerpt:'visit_no        varchar(32)  NOT NULL\npatient_id      varchar(32)\nbed_id          varchar(16)\ndischarge_dt    timestamp',
+   note:'「一次住院就诊」在这套系统里叫 visit_no。'},
+  {id:'s5', ico:'CSV', cls:'db', name:'EMR 字段字典', meta:'emr.inp_record', badge:'结构化数据',
+   excerpt:'inp_id,patient_id,medically_fit,attending_sign\nINP-2026-089,P-7712,false,NULL',
+   note:'同样是「住院就诊」，EMR 叫 inp_id。'},
+  {id:'s6', ico:'JSON', cls:'db', name:'LIS 接口日志', meta:'lis.lab_result · 30 天', badge:'运行日志',
+   excerpt:'{"encounter_id":"INP-2026-089","panel":"CBC","status":"pending"}\n{"encounter_id":"INP-2026-091","panel":"CHEM","status":"pending"}',
+   note:'第三套方言：encounter_id。检验卡点就藏在这里。'},
+  {id:'s7', ico:'REQ', cls:'mail', name:'业务需求便签', meta:'运营 · 一句话需求', badge:'需求 / 假设',
+   excerpt:'「能不能帮我做个看板，把所有被检验报告卡住、没法出院的床位列出来？顺便通知后勤做终末消毒。」\n「以后要是上了电子签，是不是就不用双签了？」',
+   note:'真正要解决的问题，以及一个尚未发生的假设。'}
+];
+
+const DOC_LINES = [
+  '出院管理 SOP v3        第 3 页 / 共 12 页',
+  '第 2.3 条  患者出院须由主治医师签署《医疗适合出院确认》后方可释放床位。',
+  '第 4.1 条  出院准备时长自医嘱下达起计算至患者离院。',
+  '附件一：床位周转统计表（略）',
+  '日间手术绿色通道 §1.2  主治单签即可放行，时长自护理评估完成起算。',
+  '[INFO] 02:14  encounter_id=INP-2026-089 payload received',
+  '交班访谈 08:41  「夜班忙的时候，有时候没等签字就先把床位放掉了。」',
+  '（本页无正文）'
+];
+
+const FRAGS = [
+  {id:'f1', src:'SOP v3 · §2.3', hash:'a3f9c1', text:'患者出院须由主治医师签署《医疗适合出院确认》后方可释放床位。', good:true,
+   why:'一条明确的规范性断言，能精确引用到条款。'},
+  {id:'f2', src:'SOP v3 · 页眉', hash:'b71e02', text:'— 第 3 页 / 共 12 页 —', good:false, why:'只是排版信息，不是业务断言。'},
+  {id:'f3', src:'绿色通道 · §1.2', hash:'c02d8e', text:'日间手术患者主治单签即可放行，出院准备时长自护理评估完成起算。', good:true,
+   why:'另一条规范，但适用范围更小；先留着，后面消解。'},
+  {id:'f4', src:'LIS 日志 · 02:14', hash:'d4aa90', text:'[INFO] encounter_id=INP-2026-089 payload received', good:false, why:'运行日志，不是可引用的业务规则。'},
+  {id:'f5', src:'交班访谈 · 08:41', hash:'e91b77', text:'「夜班忙的时候，有时候没等签字就先把床位放掉了。」', good:true,
+   why:'是观察事实，也是重要证据 —— 但绝不能当规范用。'},
+  {id:'f6', src:'SOP v3 · 附件', hash:'f60013', text:'附件一：床位周转统计表（略）', good:false, why:'附件占位说明，没有可断言的内容。'}
+];
+
+const CLAIMS = [
+  {id:'c1', text:'出院必须由主治医师签署《医疗适合出院确认》', frag:'SOP §2.3 · a3f9c1', mod:'normative',
+   why:'写了「必须」，规定业务应当如何运行 → normative。它才有资格进入权威本体。'},
+  {id:'c2', text:'HIS 的 visit_no 唯一标识一次住院就诊', frag:'HIS 快照 · 8d12bb', mod:'descriptive',
+   why:'描述系统现状，不规定对错 → descriptive。用于概念对齐，不是规则。'},
+  {id:'c3', text:'夜班偶尔未签字就先放行了床位', frag:'交班访谈 · e91b77', mod:'observational',
+   why:'发生过的事 ≠ 被允许的事。标成 normative 就等于把违规习惯写进本体。'},
+  {id:'c4', text:'若上线电子签名，未来可取消双签', frag:'需求便签 · 9c21ab', mod:'hypothetical',
+   why:'尚未发生的假设 → hypothetical。挂起等待决策，不能直接编译。'}
+];
+
+const MODS = [
+  {k:'normative', cn:'规范'}, {k:'descriptive', cn:'描述'},
+  {k:'observational', cn:'观察'}, {k:'hypothetical', cn:'假设'}
+];
+
+const FIELDS = [
+  {id:'visit_no', sys:'HIS · his.inpatient_visit', desc:'住院号'},
+  {id:'inp_id', sys:'EMR · emr.inp_record', desc:'住院记录主键'},
+  {id:'encounter_id', sys:'LIS · lab_result', desc:'就诊关联键'}
+];
+
+const DIMS = [
+  {k:'Identity', cn:'概念身份', fb:'两条讲的是同一个指标，只是起点定义不同 —— 不是身份问题，再想想。'},
+  {k:'Scope', cn:'适用范围', fb:'', good:true},
+  {k:'Time', cn:'时间版本', fb:'按时间覆盖会让 2025 年的日间手术特例，把全院普通住院的口径一起改掉。'},
+  {k:'Authority', cn:'发布权威', fb:'按权威选一份丢一份：证据图里会留下「我们曾经知道另一条规则，但把它删了」的断链。'},
+  {k:'Semantics', cn:'语义定义', fb:'语义确实不同，但根源是两份文件各自只对自己的适用范围有效。'}
+];
+
+const AST_OPTS = {
+  role:[{k:'attending', t:'role == Attending', ok:true},{k:'nurse', t:'role == Nurse'},{k:'agent', t:'role == Agent'}],
+  state:[{k:'anystate', t:'any state'},{k:'fit', t:'medically_fit == true', ok:true},{k:'lab', t:'pending_lab == false'}],
+  action:[{k:'clean', t:'ScheduleBedCleaning'},{k:'release', t:'ReleaseBed'},{k:'confirm', t:'ConfirmMedicallyFit', ok:true}]
+};
+
+const NODES = [
+  {id:'patient', x:98, y:62, cn:'患者', en:'Patient', type:'EntityType', prov:['业务需求便签 · s7','Fragment §需求-01 · 9c21ab','Claim C-014 患者是独立概念']},
+  {id:'encounter', x:320, y:62, cn:'住院就诊', en:'Encounter', type:'EntityType', prov:['HIS / EMR / LIS 三套快照','3 个跨源字段片段','Concept Registry C-017']},
+  {id:'bed', x:548, y:52, cn:'床位', en:'Bed', type:'EntityType', prov:['HIS 快照 · his.inpatient_visit','Fragment bed_id · 8d12bb','Claim C-021 床位占据关系']},
+  {id:'lab', x:548, y:162, cn:'检验结果', en:'LabResult', type:'EntityType', prov:['LIS 接口日志 · 30 天','Fragment encounter_id · d4aa90','Claim C-022 检验卡点']},
+  {id:'pathway', x:320, y:196, cn:'出院准备路径', en:'DischargePathway', type:'StateMachine', prov:['SOP v3 §4.1 + 绿色通道 §1.2','Fragment a3f9c1 / c02d8e','Scope 消解后的两个 Metric']},
+  {id:'metric', x:98, y:196, cn:'出院准备时长', en:'Metric', type:'Metric', prov:['两份互相冲突的规章','Fragment §4.1 / §1.2','Claim C-001 / C-002（scope 拆分）']},
+  {id:'action', x:548, y:288, cn:'出院确认动作', en:'Action', type:'Action', prov:['SOP v3 §2.3','Fragment a3f9c1','Claim C-001 · normative']},
+  {id:'policy', x:320, y:322, cn:'策略约束', en:'Policy', type:'Policy (AST)', prov:['SOP v3 §2.3 自然语言规则','AST 组装台 · typed','canonical-v1.2 signed']}
+];
+
+const EDGES = [
+  {a:'patient', b:'encounter', label:'has'}, {a:'encounter', b:'bed', label:'occupies'},
+  {a:'encounter', b:'lab', label:'awaits'}, {a:'encounter', b:'pathway', label:'follows'},
+  {a:'pathway', b:'metric', label:'measured_by'}, {a:'lab', b:'action', label:'blocks'},
+  {a:'action', b:'policy', label:'guards', guard:true}, {a:'policy', b:'encounter', label:'applies', guard:true}
+];
+
+const FUNNEL = [
+  {l:'资料', v:7}, {l:'片段', v:12}, {l:'主张', v:9}, {l:'概念', v:6},
+  {l:'关系', v:8}, {l:'策略', v:3}, {l:'权威本体', v:1}
+];
+
+const TERM_LINES = [
+  {h:'<span class="dim">$</span> llm-ontology compile --in candidate-ontology.json', cls:'', d:0},
+  {h:'<span class="dim">[ingest]</span> 3 EntityType · 8 Relation · 2 Metric · 3 Policy', cls:'dim', d:1},
+  {h:'<span class="ok">[ PASS ]</span> EntityType / stable ID ..................... OK', cls:'', d:0},
+  {h:'<span class="ok">[ PASS ]</span> Relation cardinality ..................... OK', cls:'', d:0},
+  {h:'<span class="ok">[ PASS ]</span> StateMachine invariants ................... OK', cls:'', d:0},
+  {h:'<span class="bad">[ FAIL ]</span> Policy AST typed ........... RAW STRING FOUND', cls:'', d:0},
+  {h:'<span class="warn">  └</span> found "仅主治医师可确认出院"  <span class="dim">(natural language)</span>', cls:'warn', d:0},
+  {h:'<span class="dim">  → 自然语言不能充当执行规则，请提交类型化 Policy AST。</span>', cls:'', d:0}
+];
+
+/* --------------------------------------------------------------- helpers */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+let toastTimer = null;
+function toast(msg, kind){
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (kind ? ' ' + kind : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = 'toast', 2600);
+}
+function shake(el){
+  if(!el) return;
+  el.classList.remove('wrong-pick','wrongpick','badpick','shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+  setTimeout(() => el.classList.remove('shake'), 450);
+}
+function flyTo(el, target, delay){
+  if(!el || !target) return Promise.resolve();
+  const a = el.getBoundingClientRect(), b = target.getBoundingClientRect();
+  const clone = el.cloneNode(true);
+  clone.style.cssText = 'position:fixed;z-index:80;margin:0;pointer-events:none;left:' + a.left + 'px;top:' + a.top +
+    'px;width:' + a.width + 'px;height:' + a.height + 'px;transition:none;';
+  document.body.appendChild(clone);
+  const dx = (b.left + b.width/2) - (a.left + a.width/2);
+  const dy = (b.top + b.height/2) - (a.top + a.height/2);
+  let anim;
+  try {
+    anim = clone.animate([
+      {transform:'translate(0,0) scale(1)', opacity:1},
+      {transform:'translate(' + dx + 'px,' + dy + 'px) scale(.14) rotate(14deg)', opacity:.1}
+    ], {duration:680, delay:delay || 0, easing:'cubic-bezier(.4,0,.7,.4)', fill:'forwards'});
+  } catch(e){ clone.remove(); return Promise.resolve(); }
+  const cleanup = () => clone.remove();
+  if(!anim.finished) return sleep(800 + (delay || 0)).then(cleanup);
+  // Never let a stalled animation block the pipeline.
+  return Promise.race([
+    anim.finished.then(cleanup).catch(cleanup),
+    sleep(1200 + (delay || 0)).then(cleanup)
+  ]);
+}
+
+/* ----------------------------------------------------------------- state */
+const state = {
+  step:0, unlocked:new Set(), tasks:new Set(), auto:false, token:0, internal:false,
+  ingested:false, scanned:false, picks:new Set(), claimsOK:new Set(),
+  fields:new Set(), trapOK:false, dimOK:false, astSel:{}, astOK:false,
+  graphDrawn:false, nodeSeen:false, projSeen:false, answered:false,
+  termDone:false, termRunning:false, termPromise:null
+};
+/* Clicks produced by the auto-demo must not cancel the auto-demo itself. */
+function internal(fn){
+  state.internal = true;
+  try { return fn(); } finally { state.internal = false; }
+}
+const taskKey = (s, i) => s + ':' + i;
+function markTask(step, idx, done){
+  const k = taskKey(step, idx);
+  if(done) state.tasks.add(k); else state.tasks.delete(k);
+  renderCoach();
+  const all = STEPS[step].tasks.every((_, i) => state.tasks.has(taskKey(step, i)));
+  if(all) unlock(step);
+}
+function unlock(step){
+  if(state.unlocked.has(step)) return;
+  state.unlocked.add(step);
+  renderRail(); updateControls();
+  toast('✓ 第 ' + step + ' 步完成，可以继续了', 'ok');
+}
+function stopAuto(){
+  if(state.internal || !state.auto) return;
+  state.auto = false; state.token++;
+  $('#autoBtn').textContent = '▶ 自动演示'; $('#autoBtn').classList.remove('on');
+}
+
+/* ------------------------------------------------------------- rendering */
+function renderRail(){
+  $('#rail').innerHTML = RAIL.map((r, i) =>
+    '<button class="rail-item ' + (i === state.step ? 'active ' : '') + (state.unlocked.has(i) ? 'done' : '') + '" data-step="' + i + '">' +
+      '<div class="rn"><span>' + r.n + '</span><span class="tick">' + (state.unlocked.has(i) ? '✓' : '') + '</span></div>' +
+      '<div class="rl">' + r.label + '</div><div class="rf">' + r.file + '</div></button>'
+  ).join('');
+  $$('#rail .rail-item').forEach(b => b.onclick = () => { stopAuto(); goto(+b.dataset.step); });
+}
+function renderHead(){
+  const s = STEPS[state.step];
+  $('#stageHead').innerHTML = '<div class="kicker">' + s.kicker + '</div><h2>' + s.title + '</h2><p>' + s.lede + '</p>';
+}
+function renderCoach(){
+  const s = STEPS[state.step];
+  $('#coach').innerHTML =
+    '<div class="step-no">' + s.kicker + '</div><h3>' + s.title + '</h3>' +
+    '<div class="cblock"><div class="lab"><i></i>这一步在做什么</div><p>' + s.what + '</p></div>' +
+    '<div class="cblock why"><div class="lab"><i></i>为什么不能直接建图</div><p>' + s.why + '</p></div>' +
+    '<div class="tasks"><div class="lab">本步任务 · 动手才算学会</div><ul>' +
+      s.tasks.map((t, i) => '<li class="' + (state.tasks.has(taskKey(state.step, i)) ? 'done' : '') + '"><span class="box">✓</span><span>' + t + '</span></li>').join('') +
+    '</ul></div>' +
+    '<div class="coach-out"><div class="lab">交给下一步的产物</div><code>' + s.output + '</code></div>' +
+    '<div class="coach-foot">💡 ' + s.tip + '</div>';
+}
+function countUp(el, to){
+  let n = 0; const inc = Math.max(1, Math.ceil(to / 6));
+  const id = setInterval(() => {
+    n += inc;
+    if(n >= to){ n = to; clearInterval(id); }
+    el.textContent = n;
+  }, 45);
+}
+function renderFunnel(){
+  $('#funnel').innerHTML = FUNNEL.map((f, i) =>
+    '<div class="fstat ' + (i <= state.step ? 'lit' : '') + '" data-i="' + i + '">' +
+      '<span class="n">' + (i < state.step ? f.v : 0) + '</span><span class="l">' + f.l + '</span>' +
+      (i < FUNNEL.length - 1 ? '<span class="arw">→</span>' : '') + '</div>'
+  ).join('');
+  const cur = $('#funnel .fstat[data-i="' + state.step + '"] .n');
+  if(cur) countUp(cur, FUNNEL[state.step].v);
+}
+function updateControls(){
+  const last = state.step === STEPS.length - 1;
+  $('#prevBtn').disabled = state.step === 0;
+  $('#nextBtn').textContent = last ? '↺ 再走一遍' : '下一步 →';
+  $('#nextBtn').disabled = !last && !state.unlocked.has(state.step);
+  $('#skipBtn').style.display = last || state.unlocked.has(state.step) ? 'none' : '';
+  $('#posLabel').textContent = 'STEP ' + String(state.step).padStart(2,'0') + ' / 06 · ' +
+    (state.unlocked.has(state.step) || last ? '本步已完成' : '完成小任务后解锁下一步');
+}
+function goto(i){
+  state.step = Math.max(0, Math.min(STEPS.length - 1, i));
+  $$('.act').forEach(a => a.classList.toggle('on', +a.dataset.i === state.step));
+  renderRail(); renderHead(); renderCoach(); renderFunnel(); updateControls();
+  if(state.step === 5 && !state.termDone) state.termPromise = runTerminal();
+  if(state.step === 6 && !state.graphDrawn) drawGraph();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ------------------------------------------------------------- ACT 0 */
+function renderDesk(){
+  $('#desk').innerHTML = SOURCES.map((s, i) =>
+    '<div class="src" data-id="' + s.id + '" style="animation-delay:' + (i * 65) + 'ms">' +
+      '<div class="srow"><div class="ico ' + s.cls + '">' + s.ico + '</div><div class="name">' + s.name + '</div></div>' +
+      '<div class="meta">' + s.meta + '</div><div class="badge">' + s.badge + '</div>' +
+      '<div class="excerpt">' + esc(s.excerpt) + '<span class="note">💡 ' + s.note + '</span></div></div>'
+  ).join('');
+  $$('#desk .src').forEach(card => {
+    // lightweight drag so the desk feels like a desk
+    let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false, moved = false;
+    card.addEventListener('click', () => {
+      if(moved){ moved = false; return; }
+      stopAuto();
+      const was = card.classList.contains('open');
+      $$('#desk .src').forEach(c => c.classList.remove('open'));
+      if(!was) card.classList.add('open');
+    });
+    card.addEventListener('pointerdown', e => {
+      if(e.button !== 0 || card.classList.contains('ingested')) return;
+      dragging = true; moved = false; sx = e.clientX; sy = e.clientY;
+      try { card.setPointerCapture(e.pointerId); } catch(err) {}
+      card.classList.add('dragging');
+    });
+    card.addEventListener('pointermove', e => {
+      if(!dragging) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if(Math.abs(dx) + Math.abs(dy) > 4){
+        moved = true;
+        card.style.transform = 'translate(' + (ox + dx) + 'px,' + (oy + dy) + 'px)';
+      }
+    });
+    card.addEventListener('pointerup', () => {
+      if(!dragging) return;
+      dragging = false; card.classList.remove('dragging');
+      const m = /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/.exec(card.style.transform || '');
+      if(m){ ox = +m[1]; oy = +m[2]; }
+    });
+  });
+}
+async function ingestAll(){
+  if(state.ingested) return;
+  state.ingested = true;
+  const cards = $$('#desk .src');
+  $('#ingestBtn').disabled = true;
+  const jobs = cards.map((c, i) => {
+    c.classList.remove('open');
+    return flyTo(c, $('#mouth'), i * 110).then(() => {
+      c.classList.add('ingested');
+      $('#mouth').classList.remove('pulse'); void $('#mouth').offsetWidth; $('#mouth').classList.add('pulse');
+      $('#ingestStatus').textContent = '已登记 ' + (i + 1) + ' / ' + cards.length + ' 份资料（含原始 Hash）…';
+    });
+  });
+  await Promise.all(jobs);
+  $('#ingestStatus').className = 'status ok';
+  $('#ingestStatus').textContent = '✓ 7 份资料原样登记完成。原文不改写 —— 这是后面所有追溯的锚点。';
+  markTask(0, 0, true);
+}
+
+/* ------------------------------------------------------------- ACT 1 */
+function renderDocLines(){
+  $('#docLines').innerHTML = DOC_LINES.map((l, i) =>
+    '<div class="docline" data-i="' + i + '">' + esc(l) + '</div>').join('');
+}
+function renderFrags(){
+  $('#fragGrid').innerHTML = FRAGS.map((f, i) =>
+    '<div class="frag" data-id="' + f.id + '" style="animation-delay:' + (i * 80) + 'ms">' +
+      '<div class="fh"><span>' + f.src + '</span><span>#' + f.hash + '</span></div>' +
+      '<div class="ft">' + esc(f.text) + '</div></div>'
+  ).join('');
+  $$('#fragGrid .frag').forEach(el => el.onclick = () => pickFrag(el));
+}
+function pickFrag(el){
+  stopAuto();
+  const f = FRAGS.find(x => x.id === el.dataset.id);
+  if(state.picks.has(f.id)) return;
+  if(!f.good){
+    el.classList.add('wrong-pick'); shake(el);
+    toast('这不是业务断言：' + f.why, 'bad');
+    setTimeout(() => el.classList.remove('wrong-pick'), 500);
+    return;
+  }
+  state.picks.add(f.id);
+  el.classList.add('good-pick','picked');
+  toast('已引用 ' + f.src + ' · #' + f.hash, 'ok');
+  $('#fragStatus').textContent = '已标记 ' + state.picks.size + ' / 3 条有效片段。';
+  if(state.picks.size === 3){
+    $('#fragStatus').className = 'status ok';
+    $('#fragStatus').textContent = '✓ 3 条片段被引用，其余 9 个片段留在库里但不会进入证据图。';
+    markTask(1, 1, true);
+  }
+}
+async function scanAll(){
+  if(state.scanned) return;
+  state.scanned = true;
+  $('#scanBtn').disabled = true;
+  $('#docView').classList.add('scanning');
+  $('#fragStatus').textContent = '扫描中：逐行定位可引用的最小单元…';
+  $$('#docLines .docline').forEach((l, i) => setTimeout(() => l.classList.add('hit'), 120 + i * 90));
+  await sleep(900);
+  renderFrags();
+  $('#docView').classList.remove('scanning');
+  $('#fragStatus').textContent = '切出 12 个片段；请点选 3 条真正含业务断言的。';
+  markTask(1, 0, true);
+  if(state.auto) return;
+}
+async function autoFind(){
+  if(!state.scanned) await scanAll();
+  for(const f of FRAGS.filter(x => x.good)){
+    if(!state.picks.has(f.id)){ const el = $('#fragGrid .frag[data-id="' + f.id + '"]'); if(el) internal(() => pickFrag(el)); }
+    await sleep(220);
+  }
+}
+
+/* ------------------------------------------------------------- ACT 2 */
+function renderClaims(){
+  $('#claimList').innerHTML = CLAIMS.map((c, i) =>
+    '<div class="claim" data-id="' + c.id + '" style="animation-delay:' + (i * 90) + 'ms">' +
+      '<div class="ct">' + c.text + '</div><div class="cf">' + c.frag + ' · 待标注模态</div>' +
+      '<div class="mods">' + MODS.map(m => '<button class="mod-btn" data-mod="' + m.k + '"><b>' + m.k + '</b>' + m.cn + '</button>').join('') + '</div>' +
+      '<div class="why-line">✓ ' + c.why + '</div></div>'
+  ).join('');
+  $$('#claimList .claim').forEach(box => {
+    $$('.mod-btn', box).forEach(btn => btn.onclick = () => {
+      stopAuto();
+      const c = CLAIMS.find(x => x.id === box.dataset.id);
+      if(state.claimsOK.has(c.id)) return;
+      if(btn.dataset.mod === c.mod){
+        btn.classList.add('correct');
+        box.classList.add('solved');
+        $('.cf', box).textContent = c.frag + ' · ' + c.mod;
+        state.claimsOK.add(c.id);
+        toast('✓ 正确：' + c.mod, 'ok');
+        $('#claimStatus').textContent = state.claimsOK.size + ' / 4 条主张已标注。';
+        if(state.claimsOK.size === 4){
+          $('#claimStatus').className = 'status ok';
+          $('#claimStatus').textContent = '✓ 4 条主张全部带模态；observational 与 hypothetical 被挡在权威本体之外。';
+          $('#provBox').classList.add('show');
+          markTask(2, 0, true);
+        }
+      } else {
+        btn.classList.add('wrongpick'); shake(btn);
+        toast('再想想：这条是「' + (c.mod === 'normative' ? '规定必须怎样' : c.mod === 'observational' ? '实际发生过' : c.mod === 'hypothetical' ? '还没发生的假设' : '描述系统现状') + '」。', 'bad');
+        setTimeout(() => btn.classList.remove('wrongpick'), 500);
+      }
+    });
+  });
+}
+async function solveClaims(){
+  for(const c of CLAIMS){
+    if(state.claimsOK.has(c.id)) continue;
+    const box = $('#claimList .claim[data-id="' + c.id + '"]');
+    const btn = $('.mod-btn[data-mod="' + c.mod + '"]', box);
+    if(btn) internal(() => btn.click());
+    await sleep(260);
+  }
+}
+
+/* ------------------------------------------------------------- ACT 3 */
+function renderFields(){
+  $('#fieldPool').innerHTML = FIELDS.map(f =>
+    '<div class="field" data-id="' + f.id + '"><div class="fk">' + f.id + '</div><div class="fs">' + f.sys + ' · ' + f.desc + '</div></div>'
+  ).join('');
+  $$('#fieldPool .field').forEach(el => el.onclick = async () => {
+    stopAuto();
+    const id = el.dataset.id;
+    if(state.fields.has(id)) return;
+    state.fields.add(id);
+    await flyTo(el, $('#conceptCore'), 0);
+    el.classList.add('merged');
+    $('#aliasEmpty').style.display = 'none';
+    const chip = document.createElement('span');
+    chip.className = 'alias'; chip.textContent = id;
+    $('#aliases').appendChild(chip);
+    $('#conceptCore').classList.remove('bump'); void $('#conceptCore').offsetWidth; $('#conceptCore').classList.add('bump');
+    $('#alignStatus').textContent = state.fields.size + ' / 3 个字段已对齐到 C-017。';
+    if(state.fields.size === 3){
+      $('#alignStatus').className = 'status ok';
+      $('#alignStatus').textContent = '✓ 三个别名挂到同一个稳定 ID；注意这只是 LINK_ALIAS，不是概念合并。';
+      markTask(3, 0, true);
+    }
+  });
+}
+function answerTrap(k){
+  stopAuto();
+  if(state.trapOK) return;
+  const fb = $('#trapFb');
+  if(k === 'KEEP_SEPARATE'){
+    state.trapOK = true;
+    $('#trap').classList.add('solved');
+    fb.className = 'fb show good';
+    fb.innerHTML = '✓ 正确。Patient 与 Payer 是两个业务概念，数值相同只是数据巧合。注册表保持两个稳定 ID，只记录一次「曾被发现高度重合」的审计备注。';
+    toast('✓ 避免了不可逆的错误合并', 'ok');
+    markTask(3, 1, true);
+  } else {
+    fb.className = 'fb show bad';
+    fb.innerHTML = k === 'MERGE_CONCEPT'
+      ? '✕ 合并之后，Payer 的结算动作会被误绑到 Patient；Schema、守卫、UI、Agent 工具全部由这份本体生成，错误会一次性扩散到所有下游产物。再试一次。'
+      : '✕ 连 LINK_ALIAS 也不该建：它们不是同一个概念的两种叫法，而是两个碰巧取值相近的不同概念。再试一次。';
+    shake($('#trap'));
+    toast('这个选择会污染下游所有生成物', 'bad');
+  }
+}
+async function solveAlign(){
+  for(const el of $$('#fieldPool .field')){
+    if(!state.fields.has(el.dataset.id)) internal(() => el.click());
+    await sleep(300);
+  }
+  await sleep(400);
+  if(!state.trapOK) internal(() => answerTrap('KEEP_SEPARATE'));
+}
+
+/* ------------------------------------------------------------- ACT 4 */
+function renderDims(){
+  $('#dims').innerHTML = DIMS.map(d =>
+    '<button class="dim" data-dim="' + d.k + '"><b>' + d.k + '</b>' + d.cn + '</button>').join('');
+  $$('#dims .dim').forEach(btn => btn.onclick = () => {
+    stopAuto();
+    const d = DIMS.find(x => x.k === btn.dataset.dim);
+    if(state.dimOK) return;
+    if(d.good){
+      btn.classList.add('goodpick');
+      state.dimOK = true;
+      $('#resolve').classList.add('show');
+      $('#reconcileStatus').className = 'status ok';
+      $('#reconcileStatus').textContent = '✓ 按 Scope 拆成两个指标，两条主张都保留；证据图记录冲突与裁决依据。';
+      toast('✓ 消解完成：候选本体已生成（尚未授权）', 'ok');
+      markTask(4, 0, true);
+    } else {
+      btn.classList.add('badpick'); shake(btn);
+      toast(d.fb, 'bad');
+      setTimeout(() => btn.classList.remove('badpick'), 500);
+    }
+  });
+}
+
+/* ------------------------------------------------------------- ACT 5 */
+function renderAstOpts(){
+  Object.keys(AST_OPTS).forEach(k => {
+    $('#opt-' + k).innerHTML = AST_OPTS[k].map(o =>
+      '<button class="ast-opt" data-k="' + k + '" data-v="' + o.k + '">' + esc(o.t) + '</button>').join('');
+  });
+  $$('.ast-opt').forEach(btn => btn.onclick = () => {
+    stopAuto();
+    const k = btn.dataset.k;
+    state.astSel[k] = btn.dataset.v;
+    $$('.ast-opt[data-k="' + k + '"]').forEach(b => b.classList.toggle('sel', b === btn));
+  });
+}
+async function runTerminal(){
+  if(state.termDone) return;
+  state.termDone = true; state.termRunning = true;
+  const term = $('#term'); term.innerHTML = '';
+  for(const line of TERM_LINES){
+    const div = document.createElement('div');
+    div.className = 'ln ' + line.cls;
+    div.innerHTML = line.h + '<span class="caret"></span>';
+    term.appendChild(div);
+    term.scrollTop = term.scrollHeight;
+    await sleep(190 + Math.random() * 130);
+    const carets = $$('.caret', term);
+    carets.forEach((c, i) => { if(i < carets.length - 1) c.remove(); });
+  }
+  $$('.caret', term).forEach(c => c.remove());
+  const p = document.createElement('div');
+  p.className = 'ln acc'; p.textContent = '> 等待类型化 Policy AST …';
+  term.appendChild(p); term.scrollTop = term.scrollHeight;
+  state.termRunning = false;
+}
+function termLog(html){
+  const term = $('#term');
+  const div = document.createElement('div');
+  div.className = 'ln'; div.innerHTML = html;
+  term.appendChild(div); term.scrollTop = term.scrollHeight;
+}
+function submitAst(){
+  stopAuto();
+  if(state.astOK) return;
+  if(state.termRunning){ toast('编译器正在逐项检查，稍等一下…'); return; }
+  const ok = Object.keys(AST_OPTS).every(k => {
+    const sel = AST_OPTS[k].find(o => o.k === state.astSel[k]);
+    return sel && sel.ok;
+  });
+  const fb = $('#astFb');
+  if(!ok){
+    fb.className = 'fb show bad';
+    fb.textContent = '✕ 类型检查未通过：主体必须是 Attending，前置条件必须校验 medically_fit，动作必须绑定 ConfirmMedicallyFit。任意一处放宽，都会让未获授权的人提前释放床位。';
+    shake($('.ast'));
+    toast('Policy AST 不合法，编译器拒绝放行', 'bad');
+    termLog('<span class="bad">[ FAIL ]</span> AST 仍不合法：缺少 typed guard。');
+    return;
+  }
+  state.astOK = true;
+  fb.className = 'fb show good';
+  fb.textContent = '✓ AST 通过：role == Attending ∧ medically_fit == true → ConfirmMedicallyFit，由确定性执行层强制校验。';
+  termLog('<span class="acc">$</span> submit policy/only-attending.ast');
+  termLog('<span class="ok">[ PASS ]</span> Policy AST typed ........................ OK');
+  termLog('<span class="ok">[ PASS ]</span> 16 contract tests (incl. 4 negative) ... OK');
+  termLog('<span class="ok">[ SIGN ]</span> canonical-ontology.json  <span class="acc">v1.2</span>  ·  approved  ✓');
+  $('#compileStatus').className = 'status ok';
+  $('#compileStatus').textContent = '✓ v1.2 已签署。从现在起，模型是唯一规范性事实源。';
+  toast('✓ 权威本体已发布 v1.2', 'ok');
+  markTask(5, 0, true);
+}
+function llmFree(){
+  stopAuto();
+  if(state.termRunning){ toast('编译器正在逐项检查，稍等一下…'); return; }
+  termLog('<span class="dim">$</span> agent.run("直接放行床位", trust_llm=true)');
+  termLog('<span class="bad">[ DRIFT ]</span> LLM 忽略了「仅主治医师」约束，判定 Nurse 工号可操作');
+  termLog('<span class="bad">[ BLOCKED? ]</span> 无 AST 守卫 → ReleaseBed 已执行，审计链缺少 modelVersion');
+  toast('看：提示词约束在长上下文里被绕过了', 'bad');
+}
+async function solveAst(){
+  if(state.termPromise) await state.termPromise;
+  for(const k of Object.keys(AST_OPTS)){
+    const o = AST_OPTS[k].find(x => x.ok);
+    const btn = $('.ast-opt[data-k="' + k + '"][data-v="' + o.k + '"]');
+    if(btn) internal(() => btn.click());
+    await sleep(220);
+  }
+  await sleep(250);
+  if(!state.astOK) internal(submitAst);
+}
+
+/* ------------------------------------------------------------- ACT 6 */
+function nodeById(id){ return NODES.find(n => n.id === id); }
+function center(n){ return {x:n.x, y:n.y}; }
+function drawGraph(){
+  state.graphDrawn = true;
+  const svg = $('#graph');
+  let out = '';
+  EDGES.forEach((e, i) => {
+    const a = center(nodeById(e.a)), b = center(nodeById(e.b));
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    out += '<path class="edge ' + (e.guard ? 'guard ' : '') + '" data-a="' + e.a + '" data-b="' + e.b +
+      '" style="animation-delay:' + (i * 100) + 'ms" d="M ' + a.x + ' ' + a.y + ' Q ' + (mx + (b.y - a.y) * .08) + ' ' +
+      (my - Math.abs(b.x - a.x) * .04) + ' ' + b.x + ' ' + b.y + '"/>';
+    out += '<text class="elabel" x="' + mx + '" y="' + (my - 6) + '" text-anchor="middle">' + e.label + '</text>';
+  });
+  NODES.forEach((n, i) => {
+    out += '<g class="node" data-id="' + n.id + '" transform="translate(' + (n.x - 68) + ',' + (n.y - 24) + ')" style="animation-delay:' + (i * 75) + 'ms">' +
+      '<rect width="136" height="48" rx="9"/>' +
+      '<text class="ncn" x="12" y="21">' + n.cn + '</text>' +
+      '<text class="nen" x="12" y="37">' + n.en + '</text></g>';
+  });
+  svg.innerHTML = out;
+  $('#graphWrap').classList.add('drawn');
+  $$('#graph .node').forEach(g => g.onclick = () => selectNode(g.dataset.id));
+}
+function selectNode(id){
+  stopAuto();
+  const n = nodeById(id);
+  $$('#graph .node').forEach(g => g.classList.toggle('sel', g.dataset.id === id));
+  $$('#graph .edge').forEach(e => e.classList.toggle('hi', e.dataset.a === id || e.dataset.b === id));
+  $('#nodeDetail').innerHTML = '<div class="dh">PROVENANCE / 溯源链</div>' +
+    '<div class="dt">' + n.cn + '</div><div class="dtype">' + n.en + ' · ' + n.type + '</div>' +
+    n.prov.map((p, i) => '<div class="prov-step" data-i="' + i + '"><div class="pl">' +
+      ['SOURCE','FRAGMENT','CLAIM / NODE'][i] + '</div><div class="pv">' + p + '</div></div>').join('') +
+    '<div style="margin-top:10px;font-size:11.5px;color:var(--faint);line-height:1.6">← 一路走回第 00 步那张桌子。模型里没有一句凭空出现的话。</div>';
+  $$('#nodeDetail .prov-step').forEach((s, i) => setTimeout(() => s.classList.add('lit'), 160 + i * 220));
+  if(!state.nodeSeen){ state.nodeSeen = true; markTask(6, 0, true); }
+  checkFinal();
+}
+function renderProjection(view, initial){
+  const out = $('#projOut');
+  if(view === 'biz'){
+    out.innerHTML = '<div class="kpi"><div class="k"><div class="kn">12</div><div class="kl">今日待出院床位</div></div>' +
+      '<div class="k"><div class="kn">3</div><div class="kl">被检验报告卡住</div></div>' +
+      '<div class="k"><div class="kn">5</div><div class="kl">终末消毒排程</div></div></div>' +
+      '<div style="margin-top:9px;font-size:11.5px;color:var(--muted)">业务方看到的只是看板；「出院准备时长」按 scope 自动选用对应指标，无需知道底层有几套表。</div>';
+  } else if(view === 'dev'){
+    out.innerHTML = '<div class="code"><span class="dim">// generated from canonical-ontology.json v1.2</span>\n' +
+      'type Encounter = {\n  id: <span class="acc">EncounterId</span>; patientId: <span class="acc">PatientId</span>;\n  bedId?: <span class="acc">BedId</span>; medically_fit: boolean;\n};\n\n' +
+      '<span class="ok">guard</span> ConfirmMedicallyFit: policy/only-attending.ast\n' +
+      '<span class="ok">emit</span> DomainEvent&lt;BedReadyForCleaning&gt;</div>';
+  } else {
+    out.innerHTML = '<div class="tools">' +
+      '<div class="tool"><span class="tn">ExpeditePendingLab</span><span class="tt warn">需医师授权</span></div>' +
+      '<div class="tool"><span class="tn">ConfirmMedicallyFit</span><span class="tt warn">Attending only</span></div>' +
+      '<div class="tool"><span class="tn">ScheduleBedCleaning</span><span class="tt ok">状态满足后可调用</span></div></div>' +
+      '<div style="margin-top:8px;font-size:11.5px;color:var(--muted)">上下文包只装载当前 Encounter 相关的最小规则与动作集合，而不是把整个本体塞进提示词。</div>';
+  }
+  if(!initial && !state.projSeen){ state.projSeen = true; markTask(6, 1, true); checkFinal(); }
+}
+function runAnswer(){
+  stopAuto();
+  if(state.answered) return;
+  state.answered = true;
+  $('#answerGrid').classList.add('show');
+  $('#answerBtn').textContent = '✓ 已用本体回答';
+  $('#mission').classList.add('answered');
+  $('#missionState').textContent = '已由 v1.2 守卫回答 ✓';
+  $('#finalStatus').className = 'status ok';
+  $('#finalStatus').textContent = '✓ 同一个问题，两种答案：差别不在模型能力，而在有没有一份受约束的本体。';
+  markTask(6, 2, true);
+  checkFinal();
+}
+function checkFinal(){
+  const all = STEPS[6].tasks.every((_, i) => state.tasks.has(taskKey(6, i)));
+  if(all && !$('#doneBanner').classList.contains('show')){
+    $('#doneBanner').classList.add('show');
+    for(let i = 0; i < 26; i++){
+      const c = document.createElement('i');
+      c.className = 'confetti';
+      c.style.left = (Math.random() * 100) + '%';
+      c.style.background = ['var(--accent)','var(--c2)','var(--c3)','var(--ok)'][i % 4];
+      c.style.animationDelay = (Math.random() * .5) + 's';
+      $('#doneBanner').appendChild(c);
+    }
+    unlock(6);
+    toast('🎉 0 → 1 完成：每一处都能走回原始文件', 'ok');
+  }
+}
+
+/* ------------------------------------------------------------- auto play */
+const SOLVERS = [
+  async () => { await ingestAll(); },
+  async () => { await scanAll(); await autoFind(); },
+  async () => { await solveClaims(); },
+  async () => { await solveAlign(); },
+  async () => { const b = $('#dims .dim[data-dim="Scope"]'); if(b && !state.dimOK) internal(() => b.click()); await sleep(500); },
+  async () => { await solveAst(); },
+  async () => {
+    const g = $('#graph .node[data-id="encounter"]'); if(g) internal(() => selectNode('encounter'));
+    await sleep(400);
+    internal(() => renderProjection('dev'));
+    $$('#projSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === 'dev')));
+    await sleep(400);
+    internal(runAnswer);
+  }
+];
+async function autoPlay(){
+  if(state.auto){ stopAuto(); return; }
+  state.auto = true; state.token++;
+  const token = state.token;
+  $('#autoBtn').textContent = '⏸ 停止演示'; $('#autoBtn').classList.add('on');
+  if(state.step !== 0){ goto(0); await sleep(400); }
+  for(let i = 0; i < STEPS.length; i++){
+    if(!state.auto || token !== state.token) return;
+    goto(i);
+    await sleep(650);
+    if(!state.auto || token !== state.token) return;
+    await SOLVERS[i]();
+    await sleep(1000);
+  }
+  if(state.auto){ state.auto = false; $('#autoBtn').textContent = '▶ 自动演示'; $('#autoBtn').classList.remove('on'); }
+}
+
+/* --------------------------------------------------------------- events */
+function bind(){
+  $('#themeBtn').onclick = () => {
+    const dark = document.documentElement.classList.toggle('dark');
+    try { localStorage.setItem('ontology-preview-theme', dark ? 'dark' : 'light'); } catch(e) {}
+    $('#themeBtn').textContent = dark ? '☀ 主题' : '◐ 主题';
+  };
+  $('#autoBtn').onclick = autoPlay;
+  $('#resetBtn').onclick = () => { stopAuto(); location.reload(); };
+  $('#ingestBtn').onclick = () => { stopAuto(); ingestAll(); };
+  $('#scanBtn').onclick = () => { stopAuto(); scanAll(); };
+  $('#autoFindBtn').onclick = () => { stopAuto(); autoFind(); };
+  $$('#trapOpts button').forEach(b => b.onclick = () => answerTrap(b.dataset.trap));
+  $('#compileAstBtn').onclick = submitAst;
+  $('#llmFreeBtn').onclick = llmFree;
+  $$('#projSeg button').forEach(b => b.onclick = () => {
+    stopAuto();
+    $$('#projSeg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    renderProjection(b.dataset.view);
+  });
+  $('#answerBtn').onclick = runAnswer;
+  $('#prevBtn').onclick = () => { stopAuto(); goto(state.step - 1); };
+  $('#nextBtn').onclick = () => {
+    stopAuto();
+    if(state.step === STEPS.length - 1){ location.reload(); return; }
+    goto(state.step + 1);
+  };
+  $('#skipBtn').onclick = () => { stopAuto(); unlock(state.step); goto(state.step + 1); };
+  // any manual interaction cancels autoplay (except the control buttons themselves)
+  document.addEventListener('click', e => {
+    if(state.auto && !state.internal && !e.target.closest('.top-actions, .controls, #rail')) stopAuto();
+  }, true);
+}
+
+/* ----------------------------------------------------------------- init */
+(function init(){
+  try {
+    const saved = localStorage.getItem('ontology-preview-theme');
+    const urlTheme = /[?&]theme=(dark|light)/.exec(location.search);
+    const dark = urlTheme ? urlTheme[1] === 'dark'
+      : saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if(dark){ document.documentElement.classList.add('dark'); $('#themeBtn').textContent = '☀ 主题'; }
+  } catch(e) {}
+  renderDesk(); renderDocLines(); renderClaims(); renderFields();
+  renderDims(); renderAstOpts(); renderProjection('biz', true);
+  bind(); goto(0);
+  // ?autorun=1 gives teachers a link that plays the whole journey on open.
+  if(/[?&]autorun=1/.test(location.search)) setTimeout(autoPlay, 420);
+})();
+})();
+</script>
+</body>
+</html>

@@ -158,3 +158,31 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0s !important; transition-duration: 0s !important; }
 }
+
+/* ---- The 0→1 lesson: a full-width interactive lab --------------------------
+   VitePress' default 688px doc column, sidebar and outline squeeze the
+   pipeline rail / graph / coach panel into a few hundred pixels. This one page
+   drops the side rails and lets the widget use the whole content width, while
+   keeping prose at a comfortable measure. */
+/* VitePress paints a 76%-opaque nav on the .VPNavBar itself, so scrolling
+   prose bleeds through. Make both layers opaque for this full-width lesson. */
+.journey-page .VPNavBar,
+.journey-page .VPNavBar .content-body { background-color: var(--ground) !important; }
+.journey-page .VPContent.has-sidebar { padding-left: 0 !important; }
+.journey-page .VPSidebar, .journey-page .VPDoc .aside { display: none; }
+.journey-page .VPDoc { padding-top: 28px; }
+.journey-page .VPDoc .container { display: block; max-width: none !important; }
+.journey-page .VPDoc .content { width: 100% !important; max-width: none !important; min-width: 0 !important; padding: 0; }
+/* VitePress sets 688px in a more specific media rule; !important is required. */
+.journey-page .VPDoc .content-container { max-width: none !important; width: 100% !important; }
+.journey-page .vp-doc { max-width: none !important; }
+.journey-page .vp-doc > h1,
+.journey-page .vp-doc > h2,
+.journey-page .vp-doc > p,
+.journey-page .vp-doc > ul,
+.journey-page .vp-doc > ol,
+.journey-page .vp-doc > table,
+.journey-page .vp-doc > .custom-block { max-width: 980px; }
+@media (max-width: 960px) {
+  .journey-page .VPDoc { padding-left: 20px; padding-right: 20px; }
+}

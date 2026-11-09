@@ -69,7 +69,7 @@ and [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki).
 
 | Path | Contents |
 |---|---|
-| [`site/`](https://caizongyuan.github.io/llm-ontology/) | **Interactive tutorial site** (VitePress + Vue 3) — 14 lessons across 5 modules with 11 interactive widgets (evidence reconciliation lab, policy AST sandbox, projectional view switcher, quiz, …). |
+| [`site/`](https://caizongyuan.github.io/llm-ontology/) | **Interactive tutorial site** (VitePress + Vue 3) — a hands-on 0→1 journey, 17 lessons across 6 modules, and 18 interactive widgets (seven-act ontology compiler, evidence reconciliation lab, policy AST sandbox, projectional view switcher, prediction-driven labs, quiz, …). |
 | [`GLOSSARY.md`](./GLOSSARY.md) | The domain language: 20+ rigorously defined terms with *avoid-lists* (e.g. don't confuse Evidence Graph with a knowledge graph). |
 | [`docs/adr/`](./docs/adr/0001-separate-evidence-graph-canonical-ontology-and-llm-wiki.md) | Architecture decision records — starting with why Evidence Graph / Canonical Ontology / LLM Wiki must be three strictly separated layers. |
 | `site/tools/subset_font.py` | Chinese font subsetting so the site ships a tiny woff2 (~display charset only). |
@@ -80,11 +80,13 @@ and [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki).
 
 | Module | Lessons |
 |---|---|
+| **00 · Hands-on: from zero to one** | [Compile a desk of messy sources into an Ontology](https://caizongyuan.github.io/llm-ontology/journey/) (seven-act interactive walkthrough with fullscreen mode) |
 | **01 · Foundations: Ontology in the Agent era** | [One-page Ontology primer](https://caizongyuan.github.io/llm-ontology/ontology/) · [The eight-layer anatomy](https://caizongyuan.github.io/llm-ontology/ontology/anatomy) · [Hospital data governance & the Agentic Hospital](https://caizongyuan.github.io/llm-ontology/ontology/hospital-governance) |
 | **02 · Open-source implementations** | [NVIDIA Auto-Ontology deep dive](https://caizongyuan.github.io/llm-ontology/opensource/auto-ontology) · [Semantica: auditable context graphs](https://caizongyuan.github.io/llm-ontology/opensource/semantica) |
 | **03 · Knowledge consolidation: LLM Wiki** | [Karpathy's pattern: from RAG to continuous compilation](https://caizongyuan.github.io/llm-ontology/wiki/karpathy-pattern) · [nashsu/llm_wiki & bidirectional anchoring](https://caizongyuan.github.io/llm-ontology/wiki/nashsu-implementation) |
 | **04 · Structured modeling: JetBrains MPS** | [Projectional editing: the model as the single source of truth](https://caizongyuan.github.io/llm-ontology/mps/projectional-editing) · [Three abstraction levels: meta-model, model, instance](https://caizongyuan.github.io/llm-ontology/mps/meta-modeling) |
 | **05 · The blueprint: `llm-ontology` itself** | [Three loops & two engines](https://caizongyuan.github.io/llm-ontology/architecture/overview) · [Dual graphs: Evidence & Domain](https://caizongyuan.github.io/llm-ontology/architecture/dual-graphs) · [Meta-model primitives & typed policy ASTs](https://caizongyuan.github.io/llm-ontology/architecture/meta-model) · [Incremental compilation & runtime context resolution](https://caizongyuan.github.io/llm-ontology/architecture/compiler-and-runtime) · [MVP experiments & self-quiz](https://caizongyuan.github.io/llm-ontology/architecture/mvp-and-quiz) |
+| **06 · Controlled landing: run the architecture** | [What does a rule change actually touch?](https://caizongyuan.github.io/llm-ontology/practice/change-set) · [Who lets an Agent actually release a bed?](https://caizongyuan.github.io/llm-ontology/practice/action-guard) · [How do we know it isn't a demo animation?](https://caizongyuan.github.io/llm-ontology/practice/golden-cases) |
 
 ## Core vocabulary
 

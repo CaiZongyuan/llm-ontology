@@ -38,13 +38,21 @@ export default defineConfig({
     logo: '/mark.svg',
     siteTitle: 'LLM Ontology',
     nav: [
+      { text: '00 从 0 到 1', link: '/journey/', activeMatch: '/journey/' },
       { text: '01 什么是 Ontology', link: '/ontology/', activeMatch: '/ontology/' },
       { text: '02 开源实现', link: '/opensource/auto-ontology', activeMatch: '/opensource/' },
       { text: '03 LLM Wiki', link: '/wiki/karpathy-pattern', activeMatch: '/wiki/' },
       { text: '04 MPS 建模', link: '/mps/projectional-editing', activeMatch: '/mps/' },
       { text: '05 本项目架构', link: '/architecture/overview', activeMatch: '/architecture/' },
+      { text: '06 受控落地', link: '/practice/change-set', activeMatch: '/practice/' },
     ],
     sidebar: [
+      {
+        text: '00 动手入门：从 0 到 1',
+        items: [
+          { text: '把一桌资料编译成 Ontology', link: '/journey/' },
+        ],
+      },
       {
         text: '01 认知基石：什么是 Ontology',
         items: [
@@ -82,6 +90,14 @@ export default defineConfig({
           { text: 'Meta-model 原语与类型化策略 AST', link: '/architecture/meta-model' },
           { text: '增量语义编译与运行时上下文解析', link: '/architecture/compiler-and-runtime' },
           { text: '最小验证实验（MVP）与综合自测', link: '/architecture/mvp-and-quiz' },
+        ],
+      },
+      {
+        text: '06 受控落地：把架构跑一遍',
+        items: [
+          { text: '一条规则改下去，到底会动到什么？', link: '/practice/change-set' },
+          { text: 'Agent 提议释放床位，谁能让它真的执行？', link: '/practice/action-guard' },
+          { text: '怎么证明它不是一段演示动画？', link: '/practice/golden-cases' },
         ],
       },
     ],

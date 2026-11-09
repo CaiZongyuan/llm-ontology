@@ -13,7 +13,7 @@
 [![Built with VitePress](https://img.shields.io/badge/VitePress-1.6-6DA55F)](https://vitepress.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-8A4FFF)](./LICENSE)
 
-**[进入交互式教程](https://caizongyuan.github.io/llm-ontology/)** · [为什么需要它](#为什么需要它) · [课程目录](#课程目录) · [核心术语](#核心术语) · [路线图](#路线图)
+**[进入交互式教程](https://caizongyuan.github.io/llm-ontology/)** · [从 0 到 1 动手课](https://caizongyuan.github.io/llm-ontology/journey/) · [为什么需要它](#为什么需要它) · [课程目录](#课程目录) · [核心术语](#核心术语) · [路线图](#路线图)
 
 English documentation: [**README.md**](./README.md)
 
@@ -66,7 +66,7 @@ flowchart LR
 
 | 路径 | 内容 |
 |---|---|
-| [`site/`](https://caizongyuan.github.io/llm-ontology/) | **交互式教程站点**（VitePress + Vue 3）—— 5 个模块 14 讲，内嵌 11 个交互组件（证据消解实验室、策略 AST 沙盘、投影视图切换器、综合自测等）。 |
+| [`site/`](https://caizongyuan.github.io/llm-ontology/) | **交互式教程站点**（VitePress + Vue 3）—— 1 门从 0 到 1 的动手入门课 + 6 个模块 17 讲，内嵌 18 个交互组件（七幕本体编译流水线、证据消解实验室、策略 AST 沙盘、投影视图切换器、预测式实验台、综合自测等）。 |
 | [`GLOSSARY.md`](./GLOSSARY.md) | 领域语言：20+ 个严格定义的术语，附 *Avoid 清单*（例如：别把证据图当知识图谱）。 |
 | [`docs/adr/`](./docs/adr/0001-separate-evidence-graph-canonical-ontology-and-llm-wiki.md) | 架构决策记录 —— 从「证据图 / 权威本体 / LLM Wiki 为何必须三层严格隔离」开始。 |
 | `site/tools/subset_font.py` | 中文字体子集化脚本，让站点只携带展示字符集的微型 woff2。 |
@@ -77,11 +77,13 @@ flowchart LR
 
 | 模块 | 课程 |
 |---|---|
+| **00 · 动手入门：从 0 到 1** | [把一桌资料编译成 Ontology](https://caizongyuan.github.io/llm-ontology/journey/)（七幕交互 · 全程动画 · 可全屏沉浸） |
 | **01 · 认知基石：什么是 Ontology** | [一页看懂 Agent 时代的 Ontology](https://caizongyuan.github.io/llm-ontology/ontology/) · [Ontology 的八层解剖](https://caizongyuan.github.io/llm-ontology/ontology/anatomy) · [医院数据治理与 Agentic Hospital](https://caizongyuan.github.io/llm-ontology/ontology/hospital-governance) |
 | **02 · 开源实现：从语义层到可审计图谱** | [NVIDIA Auto-Ontology 深度剖析](https://caizongyuan.github.io/llm-ontology/opensource/auto-ontology) · [Semantica：可审计 Context Graph](https://caizongyuan.github.io/llm-ontology/opensource/semantica) |
 | **03 · 知识沉淀范式：LLM Wiki** | [Karpathy 模式：从 RAG 到持续编译](https://caizongyuan.github.io/llm-ontology/wiki/karpathy-pattern) · [nashsu/llm_wiki 与本体双向锚定](https://caizongyuan.github.io/llm-ontology/wiki/nashsu-implementation) |
 | **04 · 结构化建模哲学：JetBrains MPS** | [投影式编辑：模型才是唯一事实源](https://caizongyuan.github.io/llm-ontology/mps/projectional-editing) · [三层抽象阶梯：元模型、领域模型与实例](https://caizongyuan.github.io/llm-ontology/mps/meta-modeling) |
 | **05 · 终极架构：`llm-ontology` 本体设计** | [三个闭环与两大引擎](https://caizongyuan.github.io/llm-ontology/architecture/overview) · [双图架构：Evidence Graph 与 Domain Graph](https://caizongyuan.github.io/llm-ontology/architecture/dual-graphs) · [Meta-model 原语与类型化策略 AST](https://caizongyuan.github.io/llm-ontology/architecture/meta-model) · [增量语义编译与运行时上下文解析](https://caizongyuan.github.io/llm-ontology/architecture/compiler-and-runtime) · [最小验证实验与综合自测](https://caizongyuan.github.io/llm-ontology/architecture/mvp-and-quiz) |
+| **06 · 受控落地：把架构跑一遍** | [一条规则改下去，到底会动到什么？](https://caizongyuan.github.io/llm-ontology/practice/change-set) · [Agent 提议释放床位，谁能让它真的执行？](https://caizongyuan.github.io/llm-ontology/practice/action-guard) · [怎么证明它不是一段演示动画？](https://caizongyuan.github.io/llm-ontology/practice/golden-cases) |
 
 ## 核心术语
 

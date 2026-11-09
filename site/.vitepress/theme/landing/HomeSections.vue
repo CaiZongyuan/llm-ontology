@@ -121,7 +121,7 @@ const PATHS = [
     <div class="pl-section-head">
       <h2><span class="nb">从基础概念、开源标杆，</span><span class="nb">一直到可落地的编译器架构</span></h2>
       <p class="pl-section-lede">
-        全站共 12 节深度交互课程，包含 9 个可亲手操作的沙盒实验台。以「智慧医院数据治理与患者出院协同」为主线贯穿始终。
+        全站共 18 节深度交互课程，包含多个可亲手操作的沙盒实验台与自测题。以「智慧医院数据治理与患者出院协同」为主线贯穿始终。
       </p>
     </div>
     <div class="cases">
@@ -146,6 +146,12 @@ const PATHS = [
     <div class="pl-section-head">
       <h2>选择你的切入路径</h2>
     </div>
+    <a class="journey-cta" :href="withBase('/journey/')">
+      <span class="jc-k mono">NEW · 动手入门</span>
+      <span class="jc-t">从 0 到 1：把一桌资料编译成 Ontology</span>
+      <span class="jc-d">7 幕交互与动画，亲手把 7 份互相冲突的医院资料，编译成一份可追溯、可执行的权威本体。</span>
+      <span class="jc-go">开始动手 →</span>
+    </a>
     <div class="paths">
       <a v-for="p in PATHS" :key="p.href" :href="withBase(p.href)">
         <span class="k mono">{{ p.k }}</span>
@@ -190,6 +196,12 @@ const PATHS = [
 .paths p { margin-top: 8px; font-size: 14px; line-height: 1.75; color: var(--ink-2); }
 .go { position: absolute; left: 22px; bottom: 16px; color: var(--accent-ink); }
 .last { padding-bottom: 140px; }
+.journey-cta { position: relative; display: block; margin-top: 40px; padding: 26px 28px; border: 1px solid var(--accent); border-radius: 16px; background: linear-gradient(100deg, var(--accent-soft), transparent 72%), var(--surface); box-shadow: var(--shadow-1); transition: transform .25s var(--ease), border-color .25s var(--ease); }
+.journey-cta:hover { transform: translateY(-2px); }
+.jc-k { font-size: 11px; color: var(--accent-ink); letter-spacing: .06em; }
+.jc-t { display: block; margin-top: 8px; font-family: var(--font-display); font-size: clamp(22px, 2.6vw, 30px); font-weight: 600; }
+.jc-d { display: block; margin-top: 8px; max-width: 760px; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
+.jc-go { display: inline-block; margin-top: 14px; font-size: 13.5px; color: var(--accent-ink); }
 @media (max-width: 1000px) {
   .moments, .paths { grid-template-columns: 1fr; }
   .moments li + li::before { display: none; }
